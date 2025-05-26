@@ -354,22 +354,23 @@ const Index = () => {
             {/* Logo and Title */}
             <div className="text-center mb-12">
               <div className="flex items-center justify-center mb-6">
-                <svg viewBox="0 0 400 120" className="w-24 h-8">
-                  <path 
-                    d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
-                    fill="none" 
-                    stroke="#7cff00" 
-                    strokeWidth="4"
-                  />
-                  <text 
-                    x="50" 
-                    y="75" 
-                    fontFamily="Arial, sans-serif" 
-                    fontSize="48" 
-                    fontWeight="bold" 
-                    fill="white"
-                  >
+                <svg viewBox="0 0 240 60" className="w-40 h-10">
+                  {/* Wise Logo */}
+                  <defs>
+                    <linearGradient id="wiseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#7cff00" />
+                      <stop offset="100%" stopColor="#5cb800" />
+                    </linearGradient>
+                  </defs>
+                  
+                  {/* WISE text */}
+                  <text x="10" y="40" fontFamily="Arial, sans-serif" fontSize="32" fontWeight="bold" fill="url(#wiseGradient)">
                     WISE
+                  </text>
+                  
+                  {/* Optimization text */}
+                  <text x="120" y="40" fontFamily="Arial, sans-serif" fontSize="16" fill="#7cff00" fontWeight="300">
+                    OPTIMIZATION
                   </text>
                 </svg>
               </div>
@@ -419,22 +420,23 @@ const Index = () => {
                   {/* Logo and Title */}
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center justify-center">
-                      <svg viewBox="0 0 400 120" className="w-12 h-4">
-                        <path 
-                          d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
-                          fill="none" 
-                          stroke="#7cff00" 
-                          strokeWidth="4"
-                        />
-                        <text 
-                          x="50" 
-                          y="75" 
-                          fontFamily="Arial, sans-serif" 
-                          fontSize="48" 
-                          fontWeight="bold" 
-                          fill="white"
-                        >
+                      <svg viewBox="0 0 240 60" className="w-20 h-5">
+                        {/* Wise Logo */}
+                        <defs>
+                          <linearGradient id="wiseGradientHeader" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" stopColor="#7cff00" />
+                            <stop offset="100%" stopColor="#5cb800" />
+                          </linearGradient>
+                        </defs>
+                        
+                        {/* WISE text */}
+                        <text x="10" y="40" fontFamily="Arial, sans-serif" fontSize="32" fontWeight="bold" fill="url(#wiseGradientHeader)">
                           WISE
+                        </text>
+                        
+                        {/* Optimization text */}
+                        <text x="120" y="40" fontFamily="Arial, sans-serif" fontSize="16" fill="#7cff00" fontWeight="300">
+                          OPTIMIZATION
                         </text>
                       </svg>
                     </div>
