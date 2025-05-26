@@ -31,20 +31,45 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
       .slice(0, 2);
   };
 
-  // Generate a consistent color based on driver name
+  // Custom driver color mapping based on user's specific groupings
   const getDriverColor = (name: string): string => {
-    const colors = [
-      'bg-red-600', 'bg-blue-600', 'bg-green-600', 'bg-yellow-600',
-      'bg-purple-600', 'bg-pink-600', 'bg-indigo-600', 'bg-orange-600',
-      'bg-teal-600', 'bg-cyan-600', 'bg-lime-600', 'bg-emerald-600'
-    ];
+    const driverColors: { [key: string]: string } = {
+      // Red Group
+      'Kyle Larson': 'bg-red-600',
+      'Alex Bowman': 'bg-red-600', 
+      'Ross Chastain': 'bg-red-600',
+      'Daniel Suarez': 'bg-red-600',
+      'Austin Dillon': 'bg-red-600',
+      
+      // Blue Group
+      'Connor Zilisch': 'bg-blue-600',
+      'Carson Kvapil': 'bg-blue-600',
+      'Austin Hill': 'bg-blue-600',
+      'Jesse Love': 'bg-blue-600',
+      'Nick Sanchez': 'bg-blue-600',
+      'Daniel Dye': 'bg-blue-600',
+      
+      // Green Group
+      'Grant Enfinger': 'bg-green-600',
+      'Daniel Hemric': 'bg-green-600',
+      'Connor Mosack': 'bg-green-600',
+      'Kaden Honeycutt': 'bg-green-600',
+      'Rajah Caruth': 'bg-green-600',
+      'Andres Perez': 'bg-green-600',
+      'Matt Mills': 'bg-green-600',
+      'Dawson Sutton': 'bg-green-600',
+      
+      // White Group
+      'Tristan McKee': 'bg-white',
+      'Helio Meza': 'bg-white',
+      'Corey Day': 'bg-white',
+      'Ben Maier': 'bg-white',
+      'Tyler Reif': 'bg-white',
+      'Brenden Queen': 'bg-white'
+    };
     
-    // Simple hash function to get consistent color for each driver
-    let hash = 0;
-    for (let i = 0; i < name.length; i++) {
-      hash = name.charCodeAt(i) + ((hash << 5) - hash);
-    }
-    return colors[Math.abs(hash) % colors.length];
+    // Return specific color for driver, or fallback to a default
+    return driverColors[name] || 'bg-gray-600';
   };
 
   // Convert driver name to filename format
@@ -55,6 +80,9 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
   const initials = getInitials(driverName);
   const colorClass = getDriverColor(driverName);
   const imagePath = getImagePath(driverName);
+  
+  // Determine text color based on background color
+  const textColor = colorClass === 'bg-white' ? 'text-black' : 'text-white';
 
   return (
     <div className={`${sizeClasses[size]} ${className} relative flex-shrink-0`}>
@@ -68,14 +96,9 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
         />
       ) : (
         <div className={`w-full h-full rounded-full ${colorClass} flex items-center justify-center border-2 border-gray-600`}>
-          <span className="font-bold text-white">{initials}</span>
+          <span className={`font-bold ${textColor}`}>{initials}</span>
         </div>
       )}
-      
-      {/* Optional racing number overlay */}
-      <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-[#7cff00] rounded-full flex items-center justify-center">
-        <i className="fas fa-car text-black text-xs"></i>
-      </div>
     </div>
   );
 };
