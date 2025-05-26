@@ -35,6 +35,21 @@ const Index = () => {
   const [selectedAthlete, setSelectedAthlete] = useState('');
   const [athleteNotes, setAthleteNotes] = useState<DriverNote[]>([]);
   const [loadingAthleteData, setLoadingAthleteData] = useState(false);
+  const [showReminderModal, setShowReminderModal] = useState(false);
+  const [reminderNote, setReminderNote] = useState<DriverNote | null>(null);
+  const [reminderDate, setReminderDate] = useState('');
+  const [reminderTime, setReminderTime] = useState('');
+  const [reminderMessage, setReminderMessage] = useState('');
+  const [activeReminders, setActiveReminders] = useState<Array<{
+    id: string;
+    noteId: string;
+    driver: string;
+    originalNote: string;
+    reminderMessage: string;
+    reminderDateTime: string;
+    createdBy: string;
+    isCompleted: boolean;
+  }>>([]);
 
   const drivers = [
     'Kyle Larson', 'Alex Bowman', 'Ross Chastain', 'Daniel Suarez', 'Austin Dillon',
@@ -290,6 +305,46 @@ const Index = () => {
       setSelectedNoteTaker(savedNoteTaker);
       setShowUserSelection(false);
     }
+    
+    // Load saved reminders
+    const savedReminders = localStorage.getItem('activeReminders');
+    if (savedReminders) {
+      setActiveReminders(JSON.parse(savedReminders));
+    }
+  }, []);
+
+  // Check for due reminders
+  useEffect(() => {
+    const checkReminders = () => {
+      const now = new Date();
+      const dueReminders = activeReminders.filter(reminder => {
+        const reminderTime = new Date(reminder.reminderDateTime);
+        return !reminder.isCompleted && reminderTime <= now;
+      });
+
+      if (dueReminders.length > 0) {
+        // Show notification for due reminders
+        dueReminders.forEach(reminder => {
+          if (Notification.permission === 'granted') {
+            new Notification(`Follow-up Reminder: ${reminder.driver}`, {
+              body: reminder.reminderMessage,
+              icon: '/images/Wise Logo.png'
+            });
+          }
+        });
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkReminders, 60000);
+    return () => clearInterval(interval);
+  }, [activeReminders]);
+
+  // Request notification permission
+  useEffect(() => {
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
   }, []);
 
   // Reset status message after 5 seconds
@@ -396,6 +451,86 @@ const Index = () => {
       });
     }
     hapticFeedback();
+  };
+
+  const handleSetReminder = (note: DriverNote) => {
+    setReminderNote(note);
+    setReminderMessage(`Follow up on: ${note.Note.substring(0, 50)}...`);
+    
+    // Set default reminder for tomorrow at 9 AM
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(9, 0, 0, 0);
+    
+    setReminderDate(tomorrow.toISOString().split('T')[0]);
+    setReminderTime('09:00');
+    setShowReminderModal(true);
+    hapticFeedback();
+  };
+
+  const handleCreateReminder = () => {
+    if (!reminderNote || !reminderDate || !reminderTime) {
+      setSaveStatus({
+        success: false,
+        message: 'Please fill in all reminder fields.'
+      });
+      return;
+    }
+
+    const reminderDateTime = new Date(`${reminderDate}T${reminderTime}`);
+    const newReminder = {
+      id: Date.now().toString(),
+      noteId: `${reminderNote.Driver}-${reminderNote.Timestamp}`,
+      driver: reminderNote.Driver,
+      originalNote: reminderNote.Note,
+      reminderMessage: reminderMessage,
+      reminderDateTime: reminderDateTime.toISOString(),
+      createdBy: selectedNoteTaker,
+      isCompleted: false
+    };
+
+    const updatedReminders = [...activeReminders, newReminder];
+    setActiveReminders(updatedReminders);
+    localStorage.setItem('activeReminders', JSON.stringify(updatedReminders));
+
+    setSaveStatus({
+      success: true,
+      message: `Reminder set for ${reminderDateTime.toLocaleDateString()} at ${reminderDateTime.toLocaleTimeString()}`
+    });
+
+    // Reset modal
+    setShowReminderModal(false);
+    setReminderNote(null);
+    setReminderDate('');
+    setReminderTime('');
+    setReminderMessage('');
+    hapticFeedback();
+  };
+
+  const handleCompleteReminder = (reminderId: string) => {
+    const updatedReminders = activeReminders.map(reminder =>
+      reminder.id === reminderId ? { ...reminder, isCompleted: true } : reminder
+    );
+    setActiveReminders(updatedReminders);
+    localStorage.setItem('activeReminders', JSON.stringify(updatedReminders));
+    hapticFeedback();
+  };
+
+  const getDueReminders = () => {
+    const now = new Date();
+    return activeReminders.filter(reminder => {
+      const reminderTime = new Date(reminder.reminderDateTime);
+      return !reminder.isCompleted && reminderTime <= now;
+    });
+  };
+
+  const getUpcomingReminders = () => {
+    const now = new Date();
+    const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+    return activeReminders.filter(reminder => {
+      const reminderTime = new Date(reminder.reminderDateTime);
+      return !reminder.isCompleted && reminderTime > now && reminderTime <= next24Hours;
+    });
   };
 
   const fetchRecentNotes = async () => {
@@ -865,6 +1000,62 @@ const Index = () => {
 
             {/* Main Content */}
             <main className="px-4 py-4 pb-24">
+              {/* Due Reminders Alert */}
+              {getDueReminders().length > 0 && (
+                <div className="mb-6 bg-yellow-900/50 border border-yellow-600 rounded-2xl p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <i className="fas fa-bell text-yellow-500 text-lg"></i>
+                    <h3 className="text-lg font-semibold text-yellow-400">
+                      {getDueReminders().length} Follow-up{getDueReminders().length > 1 ? 's' : ''} Due
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {getDueReminders().map((reminder) => (
+                      <div key={reminder.id} className="flex items-center justify-between bg-black/30 rounded-xl p-3">
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{reminder.driver}</p>
+                          <p className="text-gray-300 text-sm">{reminder.reminderMessage}</p>
+                          <p className="text-gray-400 text-xs">
+                            Due: {new Date(reminder.reminderDateTime).toLocaleString()}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleCompleteReminder(reminder.id)}
+                          className="ml-3 px-3 py-1 bg-[#7cff00] hover:bg-[#6be600] text-black text-sm font-medium rounded-lg transition-colors"
+                        >
+                          Complete
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Upcoming Reminders */}
+              {getUpcomingReminders().length > 0 && (
+                <div className="mb-6 bg-blue-900/30 border border-blue-600 rounded-2xl p-4">
+                  <div className="flex items-center space-x-3 mb-3">
+                    <i className="fas fa-clock text-blue-400 text-lg"></i>
+                    <h3 className="text-lg font-semibold text-blue-400">
+                      Upcoming Reminders (Next 24h)
+                    </h3>
+                  </div>
+                  <div className="space-y-2">
+                    {getUpcomingReminders().map((reminder) => (
+                      <div key={reminder.id} className="flex items-center justify-between bg-black/30 rounded-xl p-3">
+                        <div className="flex-1">
+                          <p className="text-white font-medium">{reminder.driver}</p>
+                          <p className="text-gray-300 text-sm">{reminder.reminderMessage}</p>
+                          <p className="text-gray-400 text-xs">
+                            Scheduled: {new Date(reminder.reminderDateTime).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Quick Selection Cards */}
               <div className="space-y-4 mb-6">
                 {/* Driver Selection */}
@@ -1025,6 +1216,13 @@ const Index = () => {
                             >
                               <i className="fas fa-share text-sm"></i>
                               <span className="text-sm">Share</span>
+                            </button>
+                            <button 
+                              className="flex items-center space-x-2 hover:text-yellow-500 transition-colors p-2"
+                              onClick={() => handleSetReminder(note)}
+                            >
+                              <i className="fas fa-bell text-sm"></i>
+                              <span className="text-sm">Remind</span>
                             </button>
                             <button 
                               className={`flex items-center space-x-2 transition-colors p-2 ${
@@ -1490,6 +1688,115 @@ const Index = () => {
                         </p>
                       </div>
                     )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reminder Modal */}
+            {showReminderModal && reminderNote && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-gray-900 w-full max-w-md rounded-2xl border border-gray-700">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <i className="fas fa-bell text-yellow-500 text-xl"></i>
+                      <div>
+                        <h2 className="text-xl font-bold">Set Follow-up Reminder</h2>
+                        <p className="text-gray-400 text-sm">{reminderNote.Driver}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => { setShowReminderModal(false); hapticFeedback(); }}
+                      className="p-2 text-gray-400 hover:text-white"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+
+                  {/* Modal Content */}
+                  <div className="p-6 space-y-4">
+                    {/* Original Note */}
+                    <div className="bg-black rounded-xl p-4 border border-gray-700">
+                      <p className="text-gray-400 text-sm mb-2">Original Note:</p>
+                      <p className="text-white text-sm">{reminderNote.Note}</p>
+                    </div>
+
+                    {/* Reminder Message */}
+                    <div>
+                      <label className="block text-gray-400 text-sm mb-2">Reminder Message</label>
+                      <textarea
+                        value={reminderMessage}
+                        onChange={(e) => setReminderMessage(e.target.value)}
+                        className="w-full h-20 p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none"
+                        placeholder="What do you want to be reminded about?"
+                      />
+                    </div>
+
+                    {/* Date and Time */}
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-2">Date</label>
+                        <input
+                          type="date"
+                          value={reminderDate}
+                          onChange={(e) => setReminderDate(e.target.value)}
+                          className="w-full p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-400 text-sm mb-2">Time</label>
+                        <input
+                          type="time"
+                          value={reminderTime}
+                          onChange={(e) => setReminderTime(e.target.value)}
+                          className="w-full p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Quick Time Options */}
+                    <div>
+                      <p className="text-gray-400 text-sm mb-2">Quick Options</p>
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { label: 'Tomorrow 9 AM', hours: 24, time: '09:00' },
+                          { label: 'In 2 hours', hours: 2, time: null },
+                          { label: 'Next week', hours: 168, time: '09:00' },
+                          { label: 'In 3 days', hours: 72, time: '09:00' }
+                        ].map((option) => (
+                          <button
+                            key={option.label}
+                            onClick={() => {
+                              const targetDate = new Date();
+                              targetDate.setHours(targetDate.getHours() + option.hours);
+                              setReminderDate(targetDate.toISOString().split('T')[0]);
+                              setReminderTime(option.time || targetDate.toTimeString().slice(0, 5));
+                              hapticFeedback();
+                            }}
+                            className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-between p-6 border-t border-gray-700">
+                    <button
+                      onClick={() => { setShowReminderModal(false); hapticFeedback(); }}
+                      className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleCreateReminder}
+                      className="px-6 py-2 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-lg transition-colors"
+                    >
+                      Set Reminder
+                    </button>
                   </div>
                 </div>
               </div>
