@@ -30,6 +30,10 @@ const Index = () => {
   const [showReplyModal, setShowReplyModal] = useState(false);
   const [replyingToNote, setReplyingToNote] = useState<DriverNote | null>(null);
   const [replyText, setReplyText] = useState('');
+  const [showAthleteDashboard, setShowAthleteDashboard] = useState(false);
+  const [selectedAthlete, setSelectedAthlete] = useState('');
+  const [athleteNotes, setAthleteNotes] = useState<DriverNote[]>([]);
+  const [loadingAthleteData, setLoadingAthleteData] = useState(false);
 
   const drivers = [
     'Kyle Larson', 'Alex Bowman', 'Ross Chastain', 'Daniel Suarez', 'Austin Dillon',
@@ -466,6 +470,47 @@ const Index = () => {
     }
   };
 
+  const openAthleteDashboard = (athlete?: string) => {
+    const athleteToShow = athlete || selectedDriver;
+    if (athleteToShow) {
+      setSelectedAthlete(athleteToShow);
+      setShowAthleteDashboard(true);
+      fetchAthleteData(athleteToShow);
+      hapticFeedback();
+    }
+  };
+
+  const fetchAthleteData = async (athlete: string) => {
+    if (!athlete) return;
+    
+    setLoadingAthleteData(true);
+    try {
+      const response = await fetch('/api/sheets', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data: DriverNote[] = await response.json();
+        // Filter notes for the selected athlete and sort by timestamp (newest first)
+        const athleteSpecificNotes = data.filter((note: DriverNote) => note.Driver === athlete)
+          .sort((a: DriverNote, b: DriverNote) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime())
+          .slice(0, 15); // Get last 15 notes for the dashboard
+        
+        setAthleteNotes(athleteSpecificNotes);
+      } else {
+        console.error('Failed to fetch athlete data');
+        setAthleteNotes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching athlete data:', error);
+      setAthleteNotes([]);
+    }
+    setLoadingAthleteData(false);
+  };
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -792,10 +837,10 @@ const Index = () => {
                 </button>
                 <button 
                   className="flex flex-col items-center space-y-1 p-2" 
-                  onClick={() => { openDriverHistory(); hapticFeedback(); }}
+                  onClick={() => { openAthleteDashboard(); hapticFeedback(); }}
                 >
-                  <i className="fas fa-chart-line text-gray-400 text-lg"></i>
-                  <span className="text-xs text-gray-400">History</span>
+                  <i className="fas fa-users text-gray-400 text-lg"></i>
+                  <span className="text-xs text-gray-400">Athletes</span>
                 </button>
                 <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
                   <i className="fas fa-cog text-gray-400 text-lg"></i>
@@ -922,6 +967,195 @@ const Index = () => {
                         </h3>
                         <p className="text-gray-500 text-sm">
                           Choose a driver from the dropdown above to view their note history.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Athlete Dashboard Modal */}
+            {showAthleteDashboard && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+                <div className="bg-gray-900 w-full h-full rounded-t-3xl border-t border-gray-700 overflow-hidden">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
+                      <div>
+                        <h2 className="text-xl font-bold">Athlete Dashboard</h2>
+                        <p className="text-gray-400 text-sm">
+                          {selectedAthlete || 'Select an athlete to view dashboard'}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => { setShowAthleteDashboard(false); hapticFeedback(); }}
+                      className="p-2 text-gray-400 hover:text-white"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+
+                  {/* Athlete Selector */}
+                  <div className="p-6 border-b border-gray-700">
+                    <select 
+                      className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
+                      value={selectedAthlete}
+                      onChange={(e) => {
+                        setSelectedAthlete(e.target.value);
+                        fetchAthleteData(e.target.value);
+                      }}
+                    >
+                      <option value="">Select athlete...</option>
+                      {drivers.map(driver => (
+                        <option key={driver} value={driver}>{driver}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Dashboard Content */}
+                  <div className="flex-1 overflow-y-auto">
+                    {selectedAthlete ? (
+                      <div className="space-y-6">
+                        {/* Athlete Stats Cards */}
+                        <div className="p-6 space-y-4">
+                          <h3 className="text-lg font-semibold text-white mb-4">Quick Stats</h3>
+                          <div className="grid grid-cols-2 gap-4">
+                            <div className="bg-black rounded-xl p-4 border border-gray-700">
+                              <div className="flex items-center space-x-3">
+                                <i className="fas fa-trophy text-[#7cff00] text-lg"></i>
+                                <div>
+                                  <p className="text-gray-400 text-sm">Next Race</p>
+                                  <p className="text-white font-semibold">TBD</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-black rounded-xl p-4 border border-gray-700">
+                              <div className="flex items-center space-x-3">
+                                <i className="fas fa-calendar text-[#7cff00] text-lg"></i>
+                                <div>
+                                  <p className="text-gray-400 text-sm">Last Race</p>
+                                  <p className="text-white font-semibold">TBD</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-black rounded-xl p-4 border border-gray-700">
+                              <div className="flex items-center space-x-3">
+                                <i className="fas fa-chart-line text-[#7cff00] text-lg"></i>
+                                <div>
+                                  <p className="text-gray-400 text-sm">Avg Finish</p>
+                                  <p className="text-white font-semibold">TBD</p>
+                                </div>
+                              </div>
+                            </div>
+                            <div className="bg-black rounded-xl p-4 border border-gray-700">
+                              <div className="flex items-center space-x-3">
+                                <i className="fas fa-star text-[#7cff00] text-lg"></i>
+                                <div>
+                                  <p className="text-gray-400 text-sm">Points</p>
+                                  <p className="text-white font-semibold">TBD</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Calendar Section */}
+                        <div className="p-6 border-t border-gray-700">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white">Race Calendar</h3>
+                            <button className="text-[#7cff00] text-sm hover:text-[#6be600] transition-colors">
+                              <i className="fas fa-plus mr-2"></i>Add Race
+                            </button>
+                          </div>
+                          <div className="bg-black rounded-xl p-6 border border-gray-700">
+                            <div className="text-center py-8">
+                              <i className="fas fa-calendar-alt text-gray-600 text-4xl mb-4"></i>
+                              <h4 className="text-lg font-semibold text-gray-400 mb-2">
+                                Calendar Coming Soon
+                              </h4>
+                              <p className="text-gray-500 text-sm">
+                                Race schedule and calendar integration will be available here
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Recent Notes Section */}
+                        <div className="p-6 border-t border-gray-700">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-semibold text-white">
+                              Recent Notes ({athleteNotes.length})
+                            </h3>
+                            <button 
+                              className="text-[#7cff00] text-sm hover:text-[#6be600] transition-colors"
+                              onClick={() => fetchAthleteData(selectedAthlete)}
+                            >
+                              <i className="fas fa-refresh mr-2"></i>Refresh
+                            </button>
+                          </div>
+                          
+                          {loadingAthleteData ? (
+                            <div className="flex items-center justify-center py-12">
+                              <div className="flex items-center space-x-3">
+                                <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-gray-400">Loading athlete notes...</span>
+                              </div>
+                            </div>
+                          ) : athleteNotes.length > 0 ? (
+                            <div className="space-y-4">
+                              {athleteNotes.map((note, index) => (
+                                <div key={index} className="bg-black rounded-xl p-4 border border-gray-700">
+                                  <div className="flex items-start space-x-3">
+                                    <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                                      <i className="fas fa-user text-gray-400 text-sm"></i>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                                        <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                                        <span className="text-gray-500">•</span>
+                                        <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
+                                      </div>
+                                      <p className="text-gray-200 text-sm leading-relaxed mb-3">
+                                        {note.Note}
+                                      </p>
+                                      {note.Tags && (
+                                        <div className="flex flex-wrap gap-2">
+                                          {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                            <span key={tagIndex} className="text-[#7cff00] text-xs">
+                                              #{tag.trim()}
+                                            </span>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="flex flex-col items-center justify-center py-12 text-center">
+                              <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
+                              <h4 className="text-lg font-semibold text-gray-400 mb-2">
+                                No Notes Found
+                              </h4>
+                              <p className="text-gray-500 text-sm">
+                                No notes found for {selectedAthlete} yet.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-20 text-center">
+                        <i className="fas fa-users text-gray-600 text-5xl mb-6"></i>
+                        <h3 className="text-xl font-semibold text-gray-400 mb-3">
+                          Select an Athlete
+                        </h3>
+                        <p className="text-gray-500 text-sm max-w-md">
+                          Choose an athlete from the dropdown above to view their comprehensive dashboard with calendar, stats, and recent notes.
                         </p>
                       </div>
                     )}
