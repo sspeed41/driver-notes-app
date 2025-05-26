@@ -1383,8 +1383,16 @@ const Index = () => {
                                   commentText = commentParts[0];
                                   commentTimestamp = commentParts[1];
                                 } else if (part.includes(' commented (') && part.includes('): ')) {
-                                  // Old format with full timestamp in parentheses
+                                  // Old format with full timestamp in parentheses: "Scott Speed commented (5/26/2025, 4:11:19 PM): message"
                                   const match = part.match(/^(.+) commented \((.+)\): (.+)$/);
+                                  if (match) {
+                                    const [, author, timestamp, message] = match;
+                                    commentText = `${author} commented: ${message}`;
+                                    commentTimestamp = timestamp;
+                                  }
+                                } else if (part.includes(' commented: ')) {
+                                  // Handle format like "Scott Speed 5/26/2025, 4:11:19 PM commented: message"
+                                  const match = part.match(/^(.+?) (\d+\/\d+\/\d+, \d+:\d+:\d+ [AP]M) commented: (.+)$/);
                                   if (match) {
                                     const [, author, timestamp, message] = match;
                                     commentText = `${author} commented: ${message}`;
@@ -1405,7 +1413,9 @@ const Index = () => {
                                       </div>
                                       {commentTimestamp && (
                                         <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                                          {commentTimestamp.includes('T') ? formatTimestamp(commentTimestamp) : commentTimestamp}
+                                          {commentTimestamp.includes('T') ? formatTimestamp(commentTimestamp) : 
+                                           commentTimestamp.includes('/') ? formatTimestamp(new Date(commentTimestamp).toISOString()) : 
+                                           commentTimestamp}
                                         </span>
                                       )}
                                     </div>

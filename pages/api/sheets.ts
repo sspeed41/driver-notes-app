@@ -4,21 +4,60 @@ import { google } from 'googleapis';
 // This will store your credentials once you've added them
 let credentials: any = null;
 try {
-  credentials = process.env.GOOGLE_SHEETS_CREDENTIALS 
-    ? JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS) 
-    : null;
+  if (process.env.GOOGLE_SHEETS_CREDENTIALS) {
+    credentials = JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS);
+  } else if (process.env.GOOGLE_SHEETS_CREDENTIALS_BASE64) {
+    // Alternative: decode from base64
+    const decodedCredentials = Buffer.from(process.env.GOOGLE_SHEETS_CREDENTIALS_BASE64, 'base64').toString('utf-8');
+    credentials = JSON.parse(decodedCredentials);
+  } else {
+    credentials = null;
+  }
 } catch (error) {
   console.error('Error parsing Google Sheets credentials:', error);
+  console.log('Credentials string length:', process.env.GOOGLE_SHEETS_CREDENTIALS?.length || 0);
+  console.log('First 100 chars:', process.env.GOOGLE_SHEETS_CREDENTIALS?.substring(0, 100) || 'N/A');
   credentials = null;
 }
+
 const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
 
+// Mock data for when credentials are not available
+const mockNotes = [
+  {
+    Driver: "Kyle Larson",
+    "Note Taker": "Scott Speed", 
+    Note: "Great performance today, very smooth driving",
+    Timestamp: new Date().toISOString(),
+    Tags: "performance,smooth"
+  },
+  {
+    Driver: "Alex Bowman",
+    "Note Taker": "Josh Wise",
+    Note: "Need to work on turn entry, but exit speed is excellent",
+    Timestamp: new Date(Date.now() - 3600000).toISOString(),
+    Tags: "technical,improvement"
+  }
+];
+
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // If no credentials, use mock data
   if (!credentials || !spreadsheetId) {
-    return res.status(500).json({ 
-      message: 'Google Sheets credentials or spreadsheet ID not configured',
-      setup: true
-    });
+    console.warn('Google Sheets credentials not configured, using mock data');
+    
+    if (req.method === 'GET') {
+      return res.status(200).json(mockNotes);
+    }
+    
+    if (req.method === 'POST') {
+      return res.status(200).json({ message: 'Note saved (mock mode)' });
+    }
+    
+    if (req.method === 'PUT') {
+      return res.status(200).json({ message: 'Comment added (mock mode)' });
+    }
+    
+    return res.status(405).json({ message: 'Method not allowed' });
   }
 
   try {
