@@ -1359,14 +1359,27 @@ const Index = () => {
                                   </span>
                                 );
                               } else {
-                                // Comment content
+                                // Comment content - parse the comment and timestamp
+                                const commentParts = part.split('\n📅 ');
+                                const commentText = commentParts[0];
+                                const commentTimestamp = commentParts[1];
+                                
                                 return (
                                   <div key={i} className="mt-3 pl-4 border-l-2 border-gray-200 bg-gray-50 rounded-r-lg p-3">
-                                    <div className="flex items-center space-x-2 mb-1">
-                                      <i className="fas fa-comment text-gray-400 text-xs"></i>
-                                      <span className="text-xs text-gray-500 font-medium">
-                                        💬 {part}
-                                      </span>
+                                    <div className="flex items-start justify-between">
+                                      <div className="flex-1">
+                                        <div className="flex items-center space-x-2 mb-1">
+                                          <i className="fas fa-comment text-gray-400 text-xs"></i>
+                                          <span className="text-sm text-gray-700">
+                                            {commentText}
+                                          </span>
+                                        </div>
+                                      </div>
+                                      {commentTimestamp && (
+                                        <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                                          {formatTimestamp(commentTimestamp)}
+                                        </span>
+                                      )}
                                     </div>
                                   </div>
                                 );
