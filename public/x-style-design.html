@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wise Driver Notes - Clean Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body { background-color: #000000; }
+        .wise-green { color: #7cff00; }
+        .wise-green-bg { background-color: #7cff00; }
+        .wise-border { border-color: #7cff00; }
+        .hover-wise:hover { background-color: #6be600; }
+        .card-hover:hover { background-color: #111111; }
+        .input-focus:focus { border-color: #7cff00; outline: none; }
+    </style>
+</head>
+<body class="bg-black text-white min-h-screen">
+    <!-- Header -->
+    <header class="border-b border-gray-800 sticky top-0 bg-black z-50">
+        <div class="max-w-6xl mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <!-- Logo and Title -->
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 flex items-center justify-center">
+                        <svg viewBox="0 0 400 120" class="w-16 h-6">
+                            <path d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
+                                  fill="none" 
+                                  stroke="#7cff00" 
+                                  stroke-width="4"/>
+                            <text x="50" y="75" 
+                                  font-family="Arial, sans-serif" 
+                                  font-size="48" 
+                                  font-weight="bold" 
+                                  fill="white">WISE</text>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold">Driver Notes</h1>
+                        <p class="text-gray-500 text-sm">Real-time racing analytics</p>
+                    </div>
+                </div>
+                
+                <!-- Status -->
+                <div class="flex items-center space-x-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    <span class="text-sm text-gray-400">Live</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 py-8">
+        <!-- Quick Selection Row -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            <!-- Driver Selection -->
+            <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 card-hover transition-colors">
+                <div class="flex items-center space-x-3 mb-4">
+                    <i class="fas fa-user-circle wise-green text-xl"></i>
+                    <h2 class="text-lg font-semibold">Driver</h2>
+                </div>
+                <select class="w-full p-4 bg-black text-white rounded-xl border border-gray-700 input-focus transition-colors">
+                    <option value="">Select driver...</option>
+                    <option>Kyle Larson</option>
+                    <option>Alex Bowman</option>
+                    <option>Ross Chastain</option>
+                    <option>Daniel Suarez</option>
+                    <option>Austin Dillon</option>
+                    <option>Connor Zilisch</option>
+                    <option>Carson Kvapil</option>
+                    <option>Austin Hill</option>
+                    <option>Jesse Love</option>
+                    <option>Nick Sanchez</option>
+                    <option>Daniel Dye</option>
+                    <option>Grant Enfinger</option>
+                    <option>Daniel Hemric</option>
+                    <option>Connor Mosack</option>
+                    <option>Kaden Honeycutt</option>
+                    <option>Rajah Caruth</option>
+                    <option>Andres Perez</option>
+                    <option>Matt Mills</option>
+                    <option>Dawson Sutton</option>
+                    <option>Tristan McKee</option>
+                    <option>Helio Meza</option>
+                    <option>Corey Day</option>
+                    <option>Ben Maier</option>
+                    <option>Tyler Reif</option>
+                    <option>Brenden Queen</option>
+                </select>
+            </div>
+
+            <!-- Note Taker Selection -->
+            <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 card-hover transition-colors">
+                <div class="flex items-center space-x-3 mb-4">
+                    <i class="fas fa-pen wise-green text-xl"></i>
+                    <h2 class="text-lg font-semibold">Note Taker</h2>
+                </div>
+                <select class="w-full p-4 bg-black text-white rounded-xl border border-gray-700 input-focus transition-colors">
+                    <option value="">Select note taker...</option>
+                    <option>Scott Speed</option>
+                    <option>Josh Wise</option>
+                    <option>Dan Jansen</option>
+                    <option>Dan Stratton</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Note Input Section -->
+        <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 mb-6">
+            <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-microphone wise-green text-xl"></i>
+                    <h2 class="text-lg font-semibold">Voice Notes</h2>
+                </div>
+                <button class="flex items-center space-x-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl transition-colors">
+                    <i class="fas fa-microphone text-sm"></i>
+                    <span class="text-sm">Start Recording</span>
+                </button>
+            </div>
+            
+            <div class="relative">
+                <textarea 
+                    class="w-full h-40 p-4 bg-black text-white rounded-xl border border-gray-700 input-focus resize-none transition-colors"
+                    placeholder="What's happening with the driver? Click the microphone to start voice recording or type directly..."
+                ></textarea>
+                
+                <!-- Character count (X-style) -->
+                <div class="absolute bottom-4 right-4 text-gray-500 text-sm">
+                    0 / 280
+                </div>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="flex items-center justify-between mt-4">
+                <div class="flex items-center space-x-4">
+                    <button class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-image"></i>
+                        <span class="text-sm">Media</span>
+                    </button>
+                    <button class="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors">
+                        <i class="fas fa-hashtag"></i>
+                        <span class="text-sm">Tags</span>
+                    </button>
+                </div>
+                
+                <button class="px-6 py-2 wise-green-bg hover-wise text-black font-semibold rounded-full transition-colors disabled:opacity-50">
+                    Save Note
+                </button>
+            </div>
+        </div>
+
+        <!-- Recent Notes Feed (X-style) -->
+        <div class="space-y-4">
+            <h3 class="text-xl font-bold mb-4">Recent Notes</h3>
+            
+            <!-- Sample Note 1 -->
+            <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 card-hover transition-colors">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="font-semibold">Scott Speed</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">Kyle Larson</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">2m ago</span>
+                        </div>
+                        <p class="text-gray-200 mb-3">Car is handling really well through turns 1-2. Driver reports good grip and confidence to push harder. Setup changes from yesterday are working perfectly.</p>
+                        <div class="flex items-center space-x-6 text-gray-500">
+                            <button class="flex items-center space-x-2 hover:text-white transition-colors">
+                                <i class="fas fa-comment text-sm"></i>
+                                <span class="text-sm">Reply</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-wise-green transition-colors">
+                                <i class="fas fa-share text-sm"></i>
+                                <span class="text-sm">Share</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-red-500 transition-colors">
+                                <i class="fas fa-heart text-sm"></i>
+                                <span class="text-sm">Like</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Note 2 -->
+            <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 card-hover transition-colors">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="font-semibold">Josh Wise</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">Alex Bowman</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">5m ago</span>
+                        </div>
+                        <p class="text-gray-200 mb-3">Experiencing some understeer in the middle of the corner. Need to adjust front sway bar settings. Driver wants more rotation. <span class="wise-green">#setup #handling</span></p>
+                        <div class="flex items-center space-x-6 text-gray-500">
+                            <button class="flex items-center space-x-2 hover:text-white transition-colors">
+                                <i class="fas fa-comment text-sm"></i>
+                                <span class="text-sm">Reply</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-wise-green transition-colors">
+                                <i class="fas fa-share text-sm"></i>
+                                <span class="text-sm">Share</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-red-500 transition-colors">
+                                <i class="fas fa-heart text-sm"></i>
+                                <span class="text-sm">Like</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sample Note 3 -->
+            <div class="bg-gray-900 rounded-2xl p-6 border border-gray-800 card-hover transition-colors">
+                <div class="flex items-start space-x-3">
+                    <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-gray-400"></i>
+                    </div>
+                    <div class="flex-1">
+                        <div class="flex items-center space-x-2 mb-2">
+                            <span class="font-semibold">Dan Jansen</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">Ross Chastain</span>
+                            <span class="text-gray-500">•</span>
+                            <span class="text-gray-500 text-sm">8m ago</span>
+                        </div>
+                        <p class="text-gray-200 mb-3">Excellent lap times! Driver is finding speed everywhere. Very confident and smooth. This setup is dialed in perfectly for this track. <span class="wise-green">#fast #confidence #setup</span></p>
+                        <div class="flex items-center space-x-6 text-gray-500">
+                            <button class="flex items-center space-x-2 hover:text-white transition-colors">
+                                <i class="fas fa-comment text-sm"></i>
+                                <span class="text-sm">Reply</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-wise-green transition-colors">
+                                <i class="fas fa-share text-sm"></i>
+                                <span class="text-sm">Share</span>
+                            </button>
+                            <button class="flex items-center space-x-2 hover:text-red-500 transition-colors">
+                                <i class="fas fa-heart text-sm"></i>
+                                <span class="text-sm">Like</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Bottom Navigation (Mobile-friendly) -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800 md:hidden">
+        <div class="flex items-center justify-around py-3">
+            <button class="flex flex-col items-center space-y-1">
+                <i class="fas fa-home wise-green"></i>
+                <span class="text-xs text-gray-400">Home</span>
+            </button>
+            <button class="flex flex-col items-center space-y-1">
+                <i class="fas fa-search text-gray-400"></i>
+                <span class="text-xs text-gray-400">Search</span>
+            </button>
+            <button class="flex flex-col items-center space-y-1">
+                <i class="fas fa-plus text-gray-400"></i>
+                <span class="text-xs text-gray-400">Note</span>
+            </button>
+            <button class="flex flex-col items-center space-y-1">
+                <i class="fas fa-chart-line text-gray-400"></i>
+                <span class="text-xs text-gray-400">Analytics</span>
+            </button>
+        </div>
+    </nav>
+
+    <script>
+        // Character counter
+        const textarea = document.querySelector('textarea');
+        const counter = document.querySelector('.absolute.bottom-4.right-4');
+        
+        textarea.addEventListener('input', function() {
+            const length = this.value.length;
+            counter.textContent = `${length} / 280`;
+            
+            if (length > 280) {
+                counter.classList.add('text-red-500');
+                counter.classList.remove('text-gray-500');
+            } else {
+                counter.classList.add('text-gray-500');
+                counter.classList.remove('text-red-500');
+            }
+        });
+
+        // Auto-resize textarea
+        textarea.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = this.scrollHeight + 'px';
+        });
+    </script>
+</body>
+</html> 
