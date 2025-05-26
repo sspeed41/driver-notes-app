@@ -107,6 +107,9 @@ const Index = () => {
     // Pre-fill the note text with @mention
     setNoteText(`@${note['Note Taker']}: `);
     
+    // Store the original note for appending the reply
+    setReplyingToNote(note);
+    
     // Scroll to the note input area
     const noteSection = document.querySelector('.note-input-section');
     if (noteSection) {
@@ -128,7 +131,7 @@ const Index = () => {
     // Show feedback
     setSaveStatus({
       success: true,
-      message: `Replying to ${note['Note Taker']} about ${note.Driver}`
+      message: `Replying to ${note['Note Taker']} about ${note.Driver} - reply will be added to original note`
     });
   };
 
@@ -308,6 +311,67 @@ const Index = () => {
 
     setIsSaving(true);
 
+    // Check if this is a reply to an existing note
+    if (replyingToNote && noteText.startsWith(`@${replyingToNote['Note Taker']}: `)) {
+      // This is a reply - append to existing note
+      const replyText = noteText.substring(`@${replyingToNote['Note Taker']}: `.length).trim();
+      
+      if (!replyText) {
+        setSaveStatus({
+          success: false,
+          message: 'Please enter a reply message.'
+        });
+        setIsSaving(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/sheets', {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            originalNote: replyingToNote,
+            replyText: `@${selectedNoteTaker}: ${replyText}`,
+            replyAuthor: selectedNoteTaker
+          }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          setSaveStatus({
+            success: false,
+            message: `Error: ${data.message || 'Failed to add reply'}`,
+          });
+          return;
+        }
+
+        setSaveStatus({
+          success: true,
+          message: 'Reply added to original note successfully!',
+        });
+
+        // Clear the note text and reply state after successful save
+        setNoteText('');
+        setReplyingToNote(null);
+        
+        // Refresh recent notes to show the updated note
+        fetchRecentNotes();
+      } catch (error) {
+        console.error('Error adding reply:', error);
+        setSaveStatus({
+          success: false,
+          message: 'Network error. Please check your connection.',
+        });
+      } finally {
+        setIsSaving(false);
+      }
+      return;
+    }
+
+    // Regular note creation
     const extractTags = (text: string): string[] => {
       const tagRegex = /#(\w+)/g;
       const matches = text.match(tagRegex);

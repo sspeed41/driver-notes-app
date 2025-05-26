@@ -81,6 +81,62 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updatedRows: response.data.updates?.updatedRows || 0
       });
 
+    } else if (req.method === 'PUT') {
+      // Update existing note with reply
+      const { originalNote, replyText, replyAuthor } = req.body;
+      
+      if (!originalNote || !replyText || !replyAuthor) {
+        return res.status(400).json({ message: 'Missing required fields for reply' });
+      }
+
+      // First, get all data to find the row to update
+      const getResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Sheet1!A:E',
+      });
+
+      const rows = getResponse.data.values || [];
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'No data found' });
+      }
+
+      // Find the row that matches the original note
+      const headers = rows[0];
+      let rowIndex = -1;
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[0] === originalNote.Driver && 
+            row[1] === originalNote['Note Taker'] && 
+            row[2] === originalNote.Note &&
+            row[3] === originalNote.Timestamp) {
+          rowIndex = i + 1; // +1 because sheets are 1-indexed
+          break;
+        }
+      }
+
+      if (rowIndex === -1) {
+        return res.status(404).json({ message: 'Original note not found' });
+      }
+
+      // Append the reply to the existing note
+      const updatedNote = `${originalNote.Note}\n\n${replyText}`;
+      
+      // Update the specific cell
+      const updateResponse = await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: `Sheet1!C${rowIndex}`, // Column C is the Note column
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [[updatedNote]],
+        },
+      });
+
+      return res.status(200).json({ 
+        message: 'Reply added to original note',
+        updatedCells: updateResponse.data.updatedCells || 0
+      });
+
     } else {
       return res.status(405).json({ message: 'Method not allowed' });
     }
