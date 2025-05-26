@@ -8,6 +8,12 @@ interface DriverNote {
   Note: string;
   Timestamp: string;
   Tags?: string;
+  originalNote?: string;
+  reminderMessage?: string;
+  reminderDateTime?: string;
+  createdBy?: string;
+  isCompleted?: boolean;
+  isDismissed?: boolean;
 }
 
 const Index = () => {
@@ -40,6 +46,8 @@ const Index = () => {
   const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [reminderMessage, setReminderMessage] = useState('');
+  const [showReminderDetail, setShowReminderDetail] = useState(false);
+  const [selectedReminderDetail, setSelectedReminderDetail] = useState<any>(null);
   const [activeReminders, setActiveReminders] = useState<Array<{
     id: string;
     noteId: string;
@@ -1117,12 +1125,17 @@ const Index = () => {
                   <div className="space-y-2">
                     {getDueReminders().map((reminder) => (
                       <div key={reminder.id} className="flex items-center justify-between bg-white rounded-xl p-3 border border-yellow-100">
-                        <div className="flex-1">
+                        <div className="flex-1 cursor-pointer" onClick={() => {
+                          setSelectedReminderDetail(reminder);
+                          setShowReminderDetail(true);
+                          hapticFeedback();
+                        }}>
                           <p className="text-gray-900 font-medium">{reminder.driver}</p>
                           <p className="text-gray-600 text-sm">{reminder.reminderMessage}</p>
                           <p className="text-gray-500 text-xs">
                             Due: {new Date(reminder.reminderDateTime).toLocaleString()}
                           </p>
+                          <p className="text-blue-500 text-xs mt-1">Click to view full note</p>
                         </div>
                         <div className="flex space-x-2 ml-3">
                           <button
@@ -1360,9 +1373,24 @@ const Index = () => {
                                 );
                               } else {
                                 // Comment content - parse the comment and timestamp
-                                const commentParts = part.split('\n📅 ');
-                                const commentText = commentParts[0];
-                                const commentTimestamp = commentParts[1];
+                                // Handle both old format (with full date) and new format (with 📅)
+                                let commentText = part;
+                                let commentTimestamp = null;
+                                
+                                if (part.includes('\n📅 ')) {
+                                  // New format with calendar emoji
+                                  const commentParts = part.split('\n📅 ');
+                                  commentText = commentParts[0];
+                                  commentTimestamp = commentParts[1];
+                                } else if (part.includes(' commented (') && part.includes('): ')) {
+                                  // Old format with full timestamp in parentheses
+                                  const match = part.match(/^(.+) commented \((.+)\): (.+)$/);
+                                  if (match) {
+                                    const [, author, timestamp, message] = match;
+                                    commentText = `${author} commented: ${message}`;
+                                    commentTimestamp = timestamp;
+                                  }
+                                }
                                 
                                 return (
                                   <div key={i} className="mt-3 pl-4 border-l-2 border-gray-200 bg-gray-50 rounded-r-lg p-3">
@@ -1377,7 +1405,7 @@ const Index = () => {
                                       </div>
                                       {commentTimestamp && (
                                         <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
-                                          {formatTimestamp(commentTimestamp)}
+                                          {commentTimestamp.includes('T') ? formatTimestamp(commentTimestamp) : commentTimestamp}
                                         </span>
                                       )}
                                     </div>
@@ -1787,6 +1815,83 @@ const Index = () => {
                     >
                       Set Reminder
                     </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Reminder Detail Modal */}
+            {showReminderDetail && selectedReminderDetail && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-2xl rounded-2xl shadow-xl border border-gray-200">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <i className="fas fa-bell text-yellow-400 text-xl"></i>
+                      <div>
+                        <h2 className="text-xl font-bold text-gray-900">Reminder Details</h2>
+                        <p className="text-gray-600 text-sm">{selectedReminderDetail.driver}</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => { setShowReminderDetail(false); hapticFeedback(); }}
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+
+                  {/* Modal Content */}
+                  <div className="p-6 space-y-4">
+                    {/* Original Note */}
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <p className="text-gray-600 text-sm mb-2 font-medium">Original Note:</p>
+                      <p className="text-gray-900">{selectedReminderDetail.originalNote}</p>
+                    </div>
+
+                    {/* Reminder Info */}
+                    <div className="bg-yellow-50 rounded-xl p-4 border border-yellow-200">
+                      <p className="text-yellow-700 text-sm mb-2 font-medium">Reminder:</p>
+                      <p className="text-yellow-800 mb-2">{selectedReminderDetail.reminderMessage}</p>
+                      <p className="text-yellow-600 text-sm">
+                        Due: {new Date(selectedReminderDetail.reminderDateTime).toLocaleString()}
+                      </p>
+                      <p className="text-yellow-600 text-sm">
+                        Created by: {selectedReminderDetail.createdBy}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Modal Footer */}
+                  <div className="flex items-center justify-between p-6 border-t border-gray-200">
+                    <button
+                      onClick={() => { setShowReminderDetail(false); hapticFeedback(); }}
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Close
+                    </button>
+                    <div className="flex space-x-3">
+                      <button
+                        onClick={() => {
+                          handleDismissReminder(selectedReminderDetail.id);
+                          setShowReminderDetail(false);
+                          hapticFeedback();
+                        }}
+                        className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-xl transition-colors"
+                      >
+                        Dismiss
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleCompleteReminder(selectedReminderDetail.id);
+                          setShowReminderDetail(false);
+                          hapticFeedback();
+                        }}
+                        className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
+                      >
+                        Complete
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
