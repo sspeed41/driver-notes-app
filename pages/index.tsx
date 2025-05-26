@@ -354,25 +354,11 @@ const Index = () => {
             {/* Logo and Title */}
             <div className="text-center mb-12">
               <div className="flex items-center justify-center mb-6">
-                <svg viewBox="0 0 240 60" className="w-40 h-10">
-                  {/* Wise Logo */}
-                  <defs>
-                    <linearGradient id="wiseGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#7cff00" />
-                      <stop offset="100%" stopColor="#5cb800" />
-                    </linearGradient>
-                  </defs>
-                  
-                  {/* WISE text */}
-                  <text x="10" y="40" fontFamily="Arial, sans-serif" fontSize="32" fontWeight="bold" fill="url(#wiseGradient)">
-                    WISE
-                  </text>
-                  
-                  {/* Optimization text */}
-                  <text x="120" y="40" fontFamily="Arial, sans-serif" fontSize="16" fill="#7cff00" fontWeight="300">
-                    OPTIMIZATION
-                  </text>
-                </svg>
+                <img 
+                  src="/images/Wise Logo.png" 
+                  alt="Wise Optimization" 
+                  className="w-40 h-auto max-h-16"
+                />
               </div>
               <h1 className="text-3xl font-bold mb-4">Driver Notes</h1>
               <p className="text-gray-400 text-lg">Who are you?</p>
@@ -420,25 +406,11 @@ const Index = () => {
                   {/* Logo and Title */}
                   <div className="flex items-center space-x-3">
                     <div className="flex items-center justify-center">
-                      <svg viewBox="0 0 240 60" className="w-20 h-5">
-                        {/* Wise Logo */}
-                        <defs>
-                          <linearGradient id="wiseGradientHeader" x1="0%" y1="0%" x2="100%" y2="0%">
-                            <stop offset="0%" stopColor="#7cff00" />
-                            <stop offset="100%" stopColor="#5cb800" />
-                          </linearGradient>
-                        </defs>
-                        
-                        {/* WISE text */}
-                        <text x="10" y="40" fontFamily="Arial, sans-serif" fontSize="32" fontWeight="bold" fill="url(#wiseGradientHeader)">
-                          WISE
-                        </text>
-                        
-                        {/* Optimization text */}
-                        <text x="120" y="40" fontFamily="Arial, sans-serif" fontSize="16" fill="#7cff00" fontWeight="300">
-                          OPTIMIZATION
-                        </text>
-                      </svg>
+                      <img 
+                        src="/images/Wise Logo.png" 
+                        alt="Wise Optimization" 
+                        className="w-20 h-auto max-h-8"
+                      />
                     </div>
                     <div>
                       <h1 className="text-lg font-bold">Driver Notes</h1>
