@@ -25,6 +25,7 @@ const Index = () => {
   }>({});
   const [recentNotes, setRecentNotes] = useState<DriverNote[]>([]);
   const [loadingRecentNotes, setLoadingRecentNotes] = useState(false);
+  const [showUserSelection, setShowUserSelection] = useState(true);
 
   const drivers = [
     'Kyle Larson', 'Alex Bowman', 'Ross Chastain', 'Daniel Suarez', 'Austin Dillon',
@@ -36,6 +37,15 @@ const Index = () => {
 
   const noteTakers = ['Scott Speed', 'Josh Wise', 'Dan Jansen', 'Dan Stratton'];
 
+  // Check if user is already selected from localStorage
+  useEffect(() => {
+    const savedNoteTaker = localStorage.getItem('selectedNoteTaker');
+    if (savedNoteTaker && noteTakers.includes(savedNoteTaker)) {
+      setSelectedNoteTaker(savedNoteTaker);
+      setShowUserSelection(false);
+    }
+  }, []);
+
   // Reset status message after 5 seconds
   useEffect(() => {
     if (saveStatus.message) {
@@ -46,10 +56,25 @@ const Index = () => {
     }
   }, [saveStatus]);
 
-  // Fetch recent notes on component mount
+  // Fetch recent notes on component mount (only if user is selected)
   useEffect(() => {
-    fetchRecentNotes();
-  }, []);
+    if (!showUserSelection) {
+      fetchRecentNotes();
+    }
+  }, [showUserSelection]);
+
+  const handleUserSelection = (noteTaker: string) => {
+    setSelectedNoteTaker(noteTaker);
+    localStorage.setItem('selectedNoteTaker', noteTaker);
+    setShowUserSelection(false);
+    hapticFeedback();
+  };
+
+  const handleChangeUser = () => {
+    setShowUserSelection(true);
+    localStorage.removeItem('selectedNoteTaker');
+    hapticFeedback();
+  };
 
   const fetchRecentNotes = async () => {
     setLoadingRecentNotes(true);
@@ -196,10 +221,10 @@ const Index = () => {
   };
 
   const handleSaveNote = async () => {
-    if (!selectedDriver || !selectedNoteTaker || !noteText.trim()) {
+    if (!selectedDriver || !noteText.trim()) {
       setSaveStatus({
         success: false,
-        message: 'Please select a driver, note taker, and enter a note.'
+        message: 'Please select a driver and enter a note.'
       });
       return;
     }
@@ -323,416 +348,469 @@ const Index = () => {
       </Head>
 
       <div className="bg-black text-white min-h-screen">
-        {/* Mobile Header */}
-        <header className="border-b border-gray-800 sticky top-0 bg-black z-50">
-          <div className="px-4 py-3">
-            <div className="flex items-center justify-between">
-              {/* Logo and Title */}
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center justify-center">
-                  <svg viewBox="0 0 400 120" className="w-12 h-4">
-                    <path 
-                      d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
-                      fill="none" 
-                      stroke="#7cff00" 
-                      strokeWidth="4"
-                    />
-                    <text 
-                      x="50" 
-                      y="75" 
-                      fontFamily="Arial, sans-serif" 
-                      fontSize="48" 
-                      fontWeight="bold" 
-                      fill="white"
-                    >
-                      WISE
-                    </text>
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold">Driver Notes</h1>
-                  <p className="text-gray-500 text-xs">Real-time analytics</p>
-                </div>
+        {/* User Selection Screen */}
+        {showUserSelection ? (
+          <div className="min-h-screen flex flex-col items-center justify-center px-4">
+            {/* Logo and Title */}
+            <div className="text-center mb-12">
+              <div className="flex items-center justify-center mb-6">
+                <svg viewBox="0 0 400 120" className="w-24 h-8">
+                  <path 
+                    d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
+                    fill="none" 
+                    stroke="#7cff00" 
+                    strokeWidth="4"
+                  />
+                  <text 
+                    x="50" 
+                    y="75" 
+                    fontFamily="Arial, sans-serif" 
+                    fontSize="48" 
+                    fontWeight="bold" 
+                    fill="white"
+                  >
+                    WISE
+                  </text>
+                </svg>
               </div>
-              
-              {/* Status and Menu */}
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center space-x-1">
-                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-gray-400">Live</span>
-                </div>
-                <button className="p-2 text-gray-400 hover:text-white" onClick={hapticFeedback}>
-                  <i className="fas fa-bars"></i>
-                </button>
-              </div>
-            </div>
-          </div>
-        </header>
-
-        {/* Main Content */}
-        <main className="px-4 py-4 pb-24">
-          {/* Quick Selection Cards */}
-          <div className="space-y-4 mb-6">
-            {/* Driver Selection */}
-            <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-              <div className="flex items-center space-x-3 mb-4">
-                <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
-                <h2 className="text-lg font-semibold">Driver</h2>
-              </div>
-              <select 
-                className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                value={selectedDriver}
-                onChange={(e) => setSelectedDriver(e.target.value)}
-              >
-                <option value="">Select driver...</option>
-                {drivers.map(driver => (
-                  <option key={driver} value={driver}>{driver}</option>
-                ))}
-              </select>
+              <h1 className="text-3xl font-bold mb-4">Driver Notes</h1>
+              <p className="text-gray-400 text-lg">Who are you?</p>
             </div>
 
-            {/* Note Taker Selection */}
-            <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-              <div className="flex items-center space-x-3 mb-4">
-                <i className="fas fa-pen text-[#7cff00] text-xl"></i>
-                <h2 className="text-lg font-semibold">Note Taker</h2>
-              </div>
-              <select 
-                className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                value={selectedNoteTaker}
-                onChange={(e) => setSelectedNoteTaker(e.target.value)}
-              >
-                <option value="">Select note taker...</option>
-                {noteTakers.map(taker => (
-                  <option key={taker} value={taker}>{taker}</option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Note Input Section */}
-          <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-3">
-                <i className="fas fa-microphone text-[#7cff00] text-xl"></i>
-                <h2 className="text-lg font-semibold">Voice Notes</h2>
-              </div>
-              <button 
-                onClick={() => { handleRecord(); hapticFeedback(); }}
-                className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors ${
-                  isRecording 
-                    ? 'bg-red-600 hover:bg-red-700' 
-                    : 'bg-gray-800 hover:bg-gray-700'
-                }`}
-              >
-                <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'} text-sm`}></i>
-                <span className="text-sm">{isRecording ? 'Stop' : 'Record'}</span>
-              </button>
-            </div>
-            
-            <div className="relative mb-4">
-              <textarea 
-                className="w-full h-32 p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none transition-colors text-lg"
-                placeholder="What's happening with the driver? Tap the microphone to start voice recording or type directly..."
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
-                style={{ minHeight: '128px', maxHeight: '200px' }}
-              />
-              
-              {/* Character count */}
-              <div className={`absolute bottom-3 right-3 text-sm ${
-                noteText.length > 280 ? 'text-red-500' : 'text-gray-500'
-              }`}>
-                {noteText.length} / 280
-              </div>
-            </div>
-            
-            {/* Action buttons */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <button 
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
-                  onClick={hapticFeedback}
+            {/* User Selection Buttons */}
+            <div className="w-full max-w-md space-y-4">
+              {noteTakers.map((noteTaker) => (
+                <button
+                  key={noteTaker}
+                  onClick={() => handleUserSelection(noteTaker)}
+                  className="w-full p-6 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-[#7cff00] rounded-2xl transition-all duration-200 text-left group"
                 >
-                  <i className="fas fa-hashtag"></i>
-                  <span className="text-sm">Tags</span>
-                </button>
-                <button 
-                  className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
-                  onClick={hapticFeedback}
-                >
-                  <i className="fas fa-clock"></i>
-                  <span className="text-sm">Time</span>
-                </button>
-              </div>
-              
-              <button 
-                className="px-6 py-3 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-full transition-colors disabled:opacity-50 text-lg"
-                onClick={() => { handleSaveNote(); hapticFeedback(); }}
-                disabled={isSaving || !selectedDriver || !selectedNoteTaker || !noteText.trim()}
-              >
-                {isSaving ? 'Saving...' : 'Save Note'}
-              </button>
-            </div>
-
-            {/* Save Status */}
-            {saveStatus.message && (
-              <div
-                className={`mt-4 p-3 rounded-xl ${
-                  saveStatus.success ? 'bg-green-800/50 text-green-200' : 'bg-red-800/50 text-red-200'
-                }`}
-              >
-                {saveStatus.message}
-              </div>
-            )}
-          </div>
-
-          {/* Recent Notes Feed */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold">Recent Notes</h3>
-              <button 
-                className="text-gray-400 hover:text-white p-2" 
-                onClick={() => { fetchRecentNotes(); hapticFeedback(); }}
-                disabled={loadingRecentNotes}
-              >
-                <i className={`fas fa-refresh ${loadingRecentNotes ? 'animate-spin' : ''}`}></i>
-              </button>
-            </div>
-            
-            {/* Recent Notes Content */}
-            {loadingRecentNotes ? (
-              <div className="flex items-center justify-center py-12">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-gray-400">Loading recent notes...</span>
-                </div>
-              </div>
-            ) : recentNotes.length > 0 ? (
-              recentNotes.map((note, index) => (
-                <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                      <i className="fas fa-user text-gray-400"></i>
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-[#7cff00] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <i className="fas fa-user text-black text-lg"></i>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                        <span className="font-semibold">{note['Note Taker'] || 'Unknown'}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-gray-500 text-sm">{note.Driver}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
-                      </div>
-                      <p className="text-gray-200 mb-4 leading-relaxed">
-                        {note.Note.split('#').map((part, i) => 
-                          i === 0 ? part : <span key={i}><span className="text-[#7cff00]">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
-                        )}
+                    <div>
+                      <h3 className="text-xl font-semibold text-white group-hover:text-[#7cff00] transition-colors">
+                        {noteTaker}
+                      </h3>
+                      <p className="text-gray-400 text-sm">Tap to continue</p>
+                    </div>
+                    <div className="ml-auto">
+                      <i className="fas fa-chevron-right text-gray-400 group-hover:text-[#7cff00] transition-colors"></i>
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Footer */}
+            <div className="mt-12 text-center">
+              <p className="text-gray-500 text-sm">
+                Select your name to start taking driver notes
+              </p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Header */}
+            <header className="border-b border-gray-800 sticky top-0 bg-black z-50">
+              <div className="px-4 py-3">
+                <div className="flex items-center justify-between">
+                  {/* Logo and Title */}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center justify-center">
+                      <svg viewBox="0 0 400 120" className="w-12 h-4">
+                        <path 
+                          d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
+                          fill="none" 
+                          stroke="#7cff00" 
+                          strokeWidth="4"
+                        />
+                        <text 
+                          x="50" 
+                          y="75" 
+                          fontFamily="Arial, sans-serif" 
+                          fontSize="48" 
+                          fontWeight="bold" 
+                          fill="white"
+                        >
+                          WISE
+                        </text>
+                      </svg>
+                    </div>
+                    <div>
+                      <h1 className="text-lg font-bold">Driver Notes</h1>
+                      <p className="text-gray-500 text-xs">
+                        {selectedNoteTaker} • Real-time analytics
                       </p>
-                      {note.Tags && (
-                        <div className="flex flex-wrap gap-2 mb-4">
-                          {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                            <span key={tagIndex} className="text-[#7cff00] text-xs">
-                              #{tag.trim()}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <div className="flex items-center space-x-6 text-gray-500">
-                        <button 
-                          className="flex items-center space-x-2 hover:text-white transition-colors p-2"
-                          onClick={hapticFeedback}
-                        >
-                          <i className="fas fa-comment text-sm"></i>
-                          <span className="text-sm">Reply</span>
-                        </button>
-                        <button 
-                          className="flex items-center space-x-2 hover:text-[#7cff00] transition-colors p-2"
-                          onClick={hapticFeedback}
-                        >
-                          <i className="fas fa-share text-sm"></i>
-                          <span className="text-sm">Share</span>
-                        </button>
-                        <button 
-                          className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2"
-                          onClick={hapticFeedback}
-                        >
-                          <i className="fas fa-heart text-sm"></i>
-                          <span className="text-sm">Like</span>
-                        </button>
-                      </div>
                     </div>
                   </div>
-                </div>
-              ))
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
-                <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                  No Recent Notes
-                </h3>
-                <p className="text-gray-500 text-sm">
-                  Start by creating your first driver note above.
-                </p>
-              </div>
-            )}
-          </div>
-        </main>
-
-        {/* Bottom Navigation */}
-        <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
-          <div className="flex items-center justify-around py-3">
-            <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
-              <i className="fas fa-home text-[#7cff00] text-lg"></i>
-              <span className="text-xs text-gray-400">Home</span>
-            </button>
-            <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
-              <i className="fas fa-search text-gray-400 text-lg"></i>
-              <span className="text-xs text-gray-400">Search</span>
-            </button>
-            <button className="flex flex-col items-center space-y-1 p-2 relative" onClick={hapticFeedback}>
-              <div className="w-12 h-12 bg-[#7cff00] rounded-full flex items-center justify-center">
-                <i className="fas fa-plus text-black text-lg"></i>
-              </div>
-              <span className="text-xs text-gray-400">Note</span>
-            </button>
-            <button 
-              className="flex flex-col items-center space-y-1 p-2" 
-              onClick={() => { openDriverHistory(); hapticFeedback(); }}
-            >
-              <i className="fas fa-chart-line text-gray-400 text-lg"></i>
-              <span className="text-xs text-gray-400">History</span>
-            </button>
-            <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
-              <i className="fas fa-cog text-gray-400 text-lg"></i>
-              <span className="text-xs text-gray-400">Settings</span>
-            </button>
-          </div>
-        </nav>
-
-        {/* Recording Indicator */}
-        {isRecording && (
-          <div className="fixed top-20 left-4 right-4 bg-red-600 text-white p-3 rounded-xl z-40">
-            <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              <span className="font-semibold">Recording...</span>
-              <span className="text-sm">Speak clearly</span>
-            </div>
-          </div>
-        )}
-
-        {/* Driver History Modal */}
-        {showDriverHistory && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-            <div className="bg-gray-900 w-full h-5/6 rounded-t-3xl border-t border-gray-700">
-              {/* Modal Header */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                <div className="flex items-center space-x-3">
-                  <i className="fas fa-history text-[#7cff00] text-xl"></i>
-                  <div>
-                    <h2 className="text-xl font-bold">Driver History</h2>
-                    <p className="text-gray-400 text-sm">
-                      {historyDriver || 'Select a driver to view history'}
-                    </p>
+                  
+                  {/* Status and Menu */}
+                  <div className="flex items-center space-x-3">
+                    <div className="flex items-center space-x-1">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      <span className="text-xs text-gray-400">Live</span>
+                    </div>
+                    <button 
+                      className="p-2 text-gray-400 hover:text-white" 
+                      onClick={handleChangeUser}
+                    >
+                      <i className="fas fa-user-cog"></i>
+                    </button>
                   </div>
                 </div>
-                <button 
-                  onClick={() => { setShowDriverHistory(false); hapticFeedback(); }}
-                  className="p-2 text-gray-400 hover:text-white"
-                >
-                  <i className="fas fa-times text-xl"></i>
-                </button>
+              </div>
+            </header>
+
+            {/* Main Content */}
+            <main className="px-4 py-4 pb-24">
+              {/* Quick Selection Cards */}
+              <div className="space-y-4 mb-6">
+                {/* Driver Selection */}
+                <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
+                    <h2 className="text-lg font-semibold">Driver</h2>
+                  </div>
+                  <select 
+                    className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
+                    value={selectedDriver}
+                    onChange={(e) => setSelectedDriver(e.target.value)}
+                  >
+                    <option value="">Select driver...</option>
+                    {drivers.map(driver => (
+                      <option key={driver} value={driver}>{driver}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
-              {/* Driver Selector */}
-              <div className="p-6 border-b border-gray-700">
-                <select 
-                  className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                  value={historyDriver}
-                  onChange={(e) => {
-                    setHistoryDriver(e.target.value);
-                    fetchDriverHistory(e.target.value);
-                  }}
-                >
-                  <option value="">Select driver to view history...</option>
-                  {drivers.map(driver => (
-                    <option key={driver} value={driver}>{driver}</option>
-                  ))}
-                </select>
+              {/* Note Input Section */}
+              <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-3">
+                    <i className="fas fa-microphone text-[#7cff00] text-xl"></i>
+                    <h2 className="text-lg font-semibold">Voice Notes</h2>
+                  </div>
+                  <button 
+                    onClick={() => { handleRecord(); hapticFeedback(); }}
+                    className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors ${
+                      isRecording 
+                        ? 'bg-red-600 hover:bg-red-700' 
+                        : 'bg-gray-800 hover:bg-gray-700'
+                    }`}
+                  >
+                    <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'} text-sm`}></i>
+                    <span className="text-sm">{isRecording ? 'Stop' : 'Record'}</span>
+                  </button>
+                </div>
+                
+                <div className="relative mb-4">
+                  <textarea 
+                    className="w-full h-32 p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none transition-colors text-lg"
+                    placeholder="What's happening with the driver? Tap the microphone to start voice recording or type directly..."
+                    value={noteText}
+                    onChange={(e) => setNoteText(e.target.value)}
+                    style={{ minHeight: '128px', maxHeight: '200px' }}
+                  />
+                  
+                  {/* Character count */}
+                  <div className={`absolute bottom-3 right-3 text-sm ${
+                    noteText.length > 280 ? 'text-red-500' : 'text-gray-500'
+                  }`}>
+                    {noteText.length} / 280
+                  </div>
+                </div>
+                
+                {/* Action buttons */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-4">
+                    <button 
+                      className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
+                      onClick={hapticFeedback}
+                    >
+                      <i className="fas fa-hashtag"></i>
+                      <span className="text-sm">Tags</span>
+                    </button>
+                    <button 
+                      className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
+                      onClick={hapticFeedback}
+                    >
+                      <i className="fas fa-clock"></i>
+                      <span className="text-sm">Time</span>
+                    </button>
+                  </div>
+                  
+                  <button 
+                    className="px-6 py-3 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-full transition-colors disabled:opacity-50 text-lg"
+                    onClick={() => { handleSaveNote(); hapticFeedback(); }}
+                    disabled={isSaving || !selectedDriver || !noteText.trim()}
+                  >
+                    {isSaving ? 'Saving...' : 'Save Note'}
+                  </button>
+                </div>
+
+                {/* Save Status */}
+                {saveStatus.message && (
+                  <div
+                    className={`mt-4 p-3 rounded-xl ${
+                      saveStatus.success ? 'bg-green-800/50 text-green-200' : 'bg-red-800/50 text-red-200'
+                    }`}
+                  >
+                    {saveStatus.message}
+                  </div>
+                )}
               </div>
 
-              {/* History Content */}
-              <div className="flex-1 overflow-y-auto p-6">
-                {loadingHistory ? (
+              {/* Recent Notes Feed */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold">Recent Notes</h3>
+                  <button 
+                    className="text-gray-400 hover:text-white p-2" 
+                    onClick={() => { fetchRecentNotes(); hapticFeedback(); }}
+                    disabled={loadingRecentNotes}
+                  >
+                    <i className={`fas fa-refresh ${loadingRecentNotes ? 'animate-spin' : ''}`}></i>
+                  </button>
+                </div>
+                
+                {/* Recent Notes Content */}
+                {loadingRecentNotes ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="flex items-center space-x-3">
                       <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-gray-400">Loading driver history...</span>
+                      <span className="text-gray-400">Loading recent notes...</span>
                     </div>
                   </div>
-                ) : driverHistoryData.length > 0 ? (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="text-lg font-semibold">
-                        Latest Notes ({driverHistoryData.length})
-                      </h3>
-                      <span className="text-sm text-gray-400">
-                        From Google Sheets
-                      </span>
-                    </div>
-                    
-                    {driverHistoryData.map((note, index) => (
-                      <div key={index} className="bg-black rounded-2xl p-5 border border-gray-700">
-                        <div className="flex items-start space-x-3">
-                          <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                            <i className="fas fa-user text-gray-400 text-sm"></i>
+                ) : recentNotes.length > 0 ? (
+                  recentNotes.map((note, index) => (
+                    <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
+                      <div className="flex items-start space-x-3">
+                        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                          <i className="fas fa-user text-gray-400"></i>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                            <span className="font-semibold">{note['Note Taker'] || 'Unknown'}</span>
+                            <span className="text-gray-500">•</span>
+                            <span className="text-gray-500 text-sm">{note.Driver}</span>
+                            <span className="text-gray-500">•</span>
+                            <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                              <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
-                              <span className="text-gray-500">•</span>
-                              <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
-                            </div>
-                            <p className="text-gray-200 text-sm leading-relaxed mb-3">
-                              {note.Note}
-                            </p>
-                            {note.Tags && (
-                              <div className="flex flex-wrap gap-2">
-                                {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                  <span key={tagIndex} className="text-[#7cff00] text-xs">
-                                    #{tag.trim()}
-                                  </span>
-                                ))}
-                              </div>
+                          <p className="text-gray-200 mb-4 leading-relaxed">
+                            {note.Note.split('#').map((part, i) => 
+                              i === 0 ? part : <span key={i}><span className="text-[#7cff00]">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
                             )}
+                          </p>
+                          {note.Tags && (
+                            <div className="flex flex-wrap gap-2 mb-4">
+                              {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                <span key={tagIndex} className="text-[#7cff00] text-xs">
+                                  #{tag.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                          <div className="flex items-center space-x-6 text-gray-500">
+                            <button 
+                              className="flex items-center space-x-2 hover:text-white transition-colors p-2"
+                              onClick={hapticFeedback}
+                            >
+                              <i className="fas fa-comment text-sm"></i>
+                              <span className="text-sm">Reply</span>
+                            </button>
+                            <button 
+                              className="flex items-center space-x-2 hover:text-[#7cff00] transition-colors p-2"
+                              onClick={hapticFeedback}
+                            >
+                              <i className="fas fa-share text-sm"></i>
+                              <span className="text-sm">Share</span>
+                            </button>
+                            <button 
+                              className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2"
+                              onClick={hapticFeedback}
+                            >
+                              <i className="fas fa-heart text-sm"></i>
+                              <span className="text-sm">Like</span>
+                            </button>
                           </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-                ) : historyDriver ? (
+                    </div>
+                  ))
+                ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
                     <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
                     <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                      No Notes Found
+                      No Recent Notes
                     </h3>
                     <p className="text-gray-500 text-sm">
-                      No notes found for {historyDriver} in the database.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <i className="fas fa-user-circle text-gray-600 text-4xl mb-4"></i>
-                    <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                      Select a Driver
-                    </h3>
-                    <p className="text-gray-500 text-sm">
-                      Choose a driver from the dropdown above to view their note history.
+                      Start by creating your first driver note above.
                     </p>
                   </div>
                 )}
               </div>
-            </div>
-          </div>
+            </main>
+
+            {/* Bottom Navigation */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
+              <div className="flex items-center justify-around py-3">
+                <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
+                  <i className="fas fa-home text-[#7cff00] text-lg"></i>
+                  <span className="text-xs text-gray-400">Home</span>
+                </button>
+                <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
+                  <i className="fas fa-search text-gray-400 text-lg"></i>
+                  <span className="text-xs text-gray-400">Search</span>
+                </button>
+                <button className="flex flex-col items-center space-y-1 p-2 relative" onClick={hapticFeedback}>
+                  <div className="w-12 h-12 bg-[#7cff00] rounded-full flex items-center justify-center">
+                    <i className="fas fa-plus text-black text-lg"></i>
+                  </div>
+                  <span className="text-xs text-gray-400">Note</span>
+                </button>
+                <button 
+                  className="flex flex-col items-center space-y-1 p-2" 
+                  onClick={() => { openDriverHistory(); hapticFeedback(); }}
+                >
+                  <i className="fas fa-chart-line text-gray-400 text-lg"></i>
+                  <span className="text-xs text-gray-400">History</span>
+                </button>
+                <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
+                  <i className="fas fa-cog text-gray-400 text-lg"></i>
+                  <span className="text-xs text-gray-400">Settings</span>
+                </button>
+              </div>
+            </nav>
+
+            {/* Recording Indicator */}
+            {isRecording && (
+              <div className="fixed top-20 left-4 right-4 bg-red-600 text-white p-3 rounded-xl z-40">
+                <div className="flex items-center space-x-3">
+                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
+                  <span className="font-semibold">Recording...</span>
+                  <span className="text-sm">Speak clearly</span>
+                </div>
+              </div>
+            )}
+
+            {/* Driver History Modal */}
+            {showDriverHistory && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
+                <div className="bg-gray-900 w-full h-5/6 rounded-t-3xl border-t border-gray-700">
+                  {/* Modal Header */}
+                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                    <div className="flex items-center space-x-3">
+                      <i className="fas fa-history text-[#7cff00] text-xl"></i>
+                      <div>
+                        <h2 className="text-xl font-bold">Driver History</h2>
+                        <p className="text-gray-400 text-sm">
+                          {historyDriver || 'Select a driver to view history'}
+                        </p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => { setShowDriverHistory(false); hapticFeedback(); }}
+                      className="p-2 text-gray-400 hover:text-white"
+                    >
+                      <i className="fas fa-times text-xl"></i>
+                    </button>
+                  </div>
+
+                  {/* Driver Selector */}
+                  <div className="p-6 border-b border-gray-700">
+                    <select 
+                      className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
+                      value={historyDriver}
+                      onChange={(e) => {
+                        setHistoryDriver(e.target.value);
+                        fetchDriverHistory(e.target.value);
+                      }}
+                    >
+                      <option value="">Select driver to view history...</option>
+                      {drivers.map(driver => (
+                        <option key={driver} value={driver}>{driver}</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* History Content */}
+                  <div className="flex-1 overflow-y-auto p-6">
+                    {loadingHistory ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-gray-400">Loading driver history...</span>
+                        </div>
+                      </div>
+                    ) : driverHistoryData.length > 0 ? (
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between mb-4">
+                          <h3 className="text-lg font-semibold">
+                            Latest Notes ({driverHistoryData.length})
+                          </h3>
+                          <span className="text-sm text-gray-400">
+                            From Google Sheets
+                          </span>
+                        </div>
+                        
+                        {driverHistoryData.map((note, index) => (
+                          <div key={index} className="bg-black rounded-2xl p-5 border border-gray-700">
+                            <div className="flex items-start space-x-3">
+                              <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                                <i className="fas fa-user text-gray-400 text-sm"></i>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                                  <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                                  <span className="text-gray-500">•</span>
+                                  <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
+                                </div>
+                                <p className="text-gray-200 text-sm leading-relaxed mb-3">
+                                  {note.Note}
+                                </p>
+                                {note.Tags && (
+                                  <div className="flex flex-wrap gap-2">
+                                    {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                      <span key={tagIndex} className="text-[#7cff00] text-xs">
+                                        #{tag.trim()}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : historyDriver ? (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
+                        <h3 className="text-lg font-semibold text-gray-400 mb-2">
+                          No Notes Found
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          No notes found for {historyDriver} in the database.
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center justify-center py-12 text-center">
+                        <i className="fas fa-user-circle text-gray-600 text-4xl mb-4"></i>
+                        <h3 className="text-lg font-semibold text-gray-400 mb-2">
+                          Select a Driver
+                        </h3>
+                        <p className="text-gray-500 text-sm">
+                          Choose a driver from the dropdown above to view their note history.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 
