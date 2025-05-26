@@ -2,9 +2,15 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 
 // This will store your credentials once you've added them
-const credentials = process.env.GOOGLE_SHEETS_CREDENTIALS 
-  ? JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS) 
-  : null;
+let credentials: any = null;
+try {
+  credentials = process.env.GOOGLE_SHEETS_CREDENTIALS 
+    ? JSON.parse(process.env.GOOGLE_SHEETS_CREDENTIALS) 
+    : null;
+} catch (error) {
+  console.error('Error parsing Google Sheets credentials:', error);
+  credentials = null;
+}
 const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || '';
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {

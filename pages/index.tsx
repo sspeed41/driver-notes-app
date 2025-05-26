@@ -471,13 +471,15 @@ const Index = () => {
   };
 
   const openAthleteDashboard = (athlete?: string) => {
-    const athleteToShow = athlete || selectedDriver;
-    if (athleteToShow) {
-      setSelectedAthlete(athleteToShow);
-      setShowAthleteDashboard(true);
-      fetchAthleteData(athleteToShow);
-      hapticFeedback();
+    // Always open the dashboard, regardless of selection
+    setSelectedAthlete(athlete || '');
+    setShowAthleteDashboard(true);
+    
+    // Only fetch data if an athlete is provided
+    if (athlete) {
+      fetchAthleteData(athlete);
     }
+    hapticFeedback();
   };
 
   const fetchAthleteData = async (athlete: string) => {
@@ -837,7 +839,10 @@ const Index = () => {
                 </button>
                 <button 
                   className="flex flex-col items-center space-y-1 p-2" 
-                  onClick={() => { openAthleteDashboard(); hapticFeedback(); }}
+                  onClick={() => { 
+                    openAthleteDashboard(); 
+                    hapticFeedback(); 
+                  }}
                 >
                   <i className="fas fa-users text-gray-400 text-lg"></i>
                   <span className="text-xs text-gray-400">Athletes</span>
@@ -978,9 +983,9 @@ const Index = () => {
             {/* Athlete Dashboard Modal */}
             {showAthleteDashboard && (
               <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-                <div className="bg-gray-900 w-full h-full rounded-t-3xl border-t border-gray-700 overflow-hidden">
+                <div className="bg-gray-900 w-full h-full rounded-t-3xl border-t border-gray-700 flex flex-col">
                   {/* Modal Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
                     <div className="flex items-center space-x-3">
                       <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
                       <div>
@@ -999,7 +1004,7 @@ const Index = () => {
                   </div>
 
                   {/* Athlete Selector */}
-                  <div className="p-6 border-b border-gray-700">
+                  <div className="p-6 border-b border-gray-700 flex-shrink-0">
                     <select 
                       className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
                       value={selectedAthlete}
@@ -1016,9 +1021,9 @@ const Index = () => {
                   </div>
 
                   {/* Dashboard Content */}
-                  <div className="flex-1 overflow-y-auto">
+                  <div className="flex-1 overflow-y-auto min-h-0">
                     {selectedAthlete ? (
-                      <div className="space-y-6">
+                      <div className="space-y-6 pb-6">
                         {/* Athlete Stats Cards */}
                         <div className="p-6 space-y-4">
                           <h3 className="text-lg font-semibold text-white mb-4">Quick Stats</h3>
