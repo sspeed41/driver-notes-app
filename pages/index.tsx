@@ -101,54 +101,35 @@ const Index = () => {
   };
 
   const handleReplyToNote = (note: DriverNote) => {
-    setReplyingToNote(note);
-    setShowReplyModal(true);
-    hapticFeedback();
-  };
-
-  const handleSubmitReply = async () => {
-    if (!replyText.trim() || !replyingToNote) return;
-
-    const replyNote = {
-      id: Date.now().toString(),
-      driver: replyingToNote.Driver,
-      noteTaker: selectedNoteTaker,
-      note: `@${replyingToNote['Note Taker']}: ${replyText.trim()}`,
-      timestamp: new Date().toISOString(),
-      tags: [],
-    };
-
-    try {
-      const response = await fetch('/api/sheets', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ notes: [replyNote] }),
-      });
-
-      if (response.ok) {
-        setSaveStatus({
-          success: true,
-          message: 'Reply posted successfully!'
-        });
-        setReplyText('');
-        setShowReplyModal(false);
-        setReplyingToNote(null);
-        // Refresh recent notes to show the reply
-        fetchRecentNotes();
-      } else {
-        setSaveStatus({
-          success: false,
-          message: 'Failed to post reply'
-        });
-      }
-    } catch (error) {
-      setSaveStatus({
-        success: false,
-        message: 'Error posting reply'
-      });
+    // Set the driver to match the note being replied to
+    setSelectedDriver(note.Driver);
+    
+    // Pre-fill the note text with @mention
+    setNoteText(`@${note['Note Taker']}: `);
+    
+    // Scroll to the note input area
+    const noteSection = document.querySelector('.note-input-section');
+    if (noteSection) {
+      noteSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+    
+    // Focus the textarea after a short delay
+    setTimeout(() => {
+      const textarea = document.querySelector('textarea');
+      if (textarea) {
+        textarea.focus();
+        // Position cursor at the end
+        textarea.setSelectionRange(textarea.value.length, textarea.value.length);
+      }
+    }, 500);
+    
+    hapticFeedback();
+    
+    // Show feedback
+    setSaveStatus({
+      success: true,
+      message: `Replying to ${note['Note Taker']} about ${note.Driver}`
+    });
   };
 
   const handleShareNote = (note: DriverNote) => {
@@ -557,7 +538,7 @@ const Index = () => {
               </div>
 
               {/* Note Input Section */}
-              <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6">
+              <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6 note-input-section">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
                     <i className="fas fa-microphone text-[#7cff00] text-xl"></i>
@@ -880,86 +861,6 @@ const Index = () => {
                         </p>
                       </div>
                     )}
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Reply Modal */}
-            {showReplyModal && replyingToNote && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-                <div className="bg-gray-900 w-full h-3/4 rounded-t-3xl border-t border-gray-700">
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                    <div className="flex items-center space-x-3">
-                      <i className="fas fa-reply text-[#7cff00] text-xl"></i>
-                      <div>
-                        <h2 className="text-xl font-bold">Reply to Note</h2>
-                        <p className="text-gray-400 text-sm">
-                          Replying to {replyingToNote['Note Taker']} about {replyingToNote.Driver}
-                        </p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => { setShowReplyModal(false); setReplyingToNote(null); setReplyText(''); hapticFeedback(); }}
-                      className="p-2 text-gray-400 hover:text-white"
-                    >
-                      <i className="fas fa-times text-xl"></i>
-                    </button>
-                  </div>
-
-                  {/* Original Note */}
-                  <div className="p-6 border-b border-gray-700">
-                    <div className="bg-black rounded-2xl p-4 border border-gray-700">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <span className="font-semibold text-sm">{replyingToNote['Note Taker']}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-gray-500 text-sm">{replyingToNote.Driver}</span>
-                        <span className="text-gray-500">•</span>
-                        <span className="text-gray-500 text-xs">{formatTimestamp(replyingToNote.Timestamp)}</span>
-                      </div>
-                      <p className="text-gray-200 text-sm">
-                        {replyingToNote.Note}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Reply Input */}
-                  <div className="flex-1 p-6">
-                    <div className="mb-4">
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Your Reply
-                      </label>
-                      <textarea 
-                        className="w-full h-32 p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none transition-colors text-lg"
-                        placeholder={`Reply to ${replyingToNote['Note Taker']}...`}
-                        value={replyText}
-                        onChange={(e) => setReplyText(e.target.value)}
-                        maxLength={280}
-                      />
-                      <div className={`text-right text-sm mt-2 ${
-                        replyText.length > 280 ? 'text-red-500' : 'text-gray-500'
-                      }`}>
-                        {replyText.length} / 280
-                      </div>
-                    </div>
-
-                    {/* Reply Actions */}
-                    <div className="flex items-center justify-between">
-                      <button 
-                        onClick={() => { setShowReplyModal(false); setReplyingToNote(null); setReplyText(''); hapticFeedback(); }}
-                        className="px-6 py-3 bg-gray-700 hover:bg-gray-600 text-white font-semibold rounded-full transition-colors"
-                      >
-                        Cancel
-                      </button>
-                      <button 
-                        onClick={() => { handleSubmitReply(); hapticFeedback(); }}
-                        disabled={!replyText.trim()}
-                        className="px-6 py-3 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-full transition-colors disabled:opacity-50"
-                      >
-                        Post Reply
-                      </button>
-                    </div>
                   </div>
                 </div>
               </div>
