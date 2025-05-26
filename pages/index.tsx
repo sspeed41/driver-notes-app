@@ -23,6 +23,8 @@ const Index = () => {
     success?: boolean;
     message?: string;
   }>({});
+  const [recentNotes, setRecentNotes] = useState<DriverNote[]>([]);
+  const [loadingRecentNotes, setLoadingRecentNotes] = useState(false);
 
   const drivers = [
     'Kyle Larson', 'Alex Bowman', 'Ross Chastain', 'Daniel Suarez', 'Austin Dillon',
@@ -43,6 +45,40 @@ const Index = () => {
       return () => clearTimeout(timer);
     }
   }, [saveStatus]);
+
+  // Fetch recent notes on component mount
+  useEffect(() => {
+    fetchRecentNotes();
+  }, []);
+
+  const fetchRecentNotes = async () => {
+    setLoadingRecentNotes(true);
+    try {
+      const response = await fetch('/api/sheets', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (response.ok) {
+        const data: DriverNote[] = await response.json();
+        // Sort by timestamp (newest first) and get the last 5 notes
+        const sortedNotes = data
+          .sort((a: DriverNote, b: DriverNote) => new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime())
+          .slice(0, 5);
+        
+        setRecentNotes(sortedNotes);
+      } else {
+        console.error('Failed to fetch recent notes');
+        setRecentNotes([]);
+      }
+    } catch (error) {
+      console.error('Error fetching recent notes:', error);
+      setRecentNotes([]);
+    }
+    setLoadingRecentNotes(false);
+  };
 
   const handleRecord = () => {
     setIsRecording(!isRecording);
@@ -211,6 +247,9 @@ const Index = () => {
 
       // Clear the note text after successful save
       setNoteText('');
+      
+      // Refresh recent notes to show the new note
+      fetchRecentNotes();
     } catch (error) {
       console.error('Error saving note:', error);
       setSaveStatus({
@@ -452,77 +491,90 @@ const Index = () => {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold">Recent Notes</h3>
-              <button className="text-gray-400 hover:text-white p-2" onClick={hapticFeedback}>
-                <i className="fas fa-refresh"></i>
+              <button 
+                className="text-gray-400 hover:text-white p-2" 
+                onClick={() => { fetchRecentNotes(); hapticFeedback(); }}
+                disabled={loadingRecentNotes}
+              >
+                <i className={`fas fa-refresh ${loadingRecentNotes ? 'animate-spin' : ''}`}></i>
               </button>
             </div>
             
-            {/* Sample Notes */}
-            {[
-              {
-                author: 'Scott Speed',
-                driver: 'Kyle Larson',
-                time: '2m ago',
-                content: 'Car is handling really well through turns 1-2. Driver reports good grip and confidence to push harder. Setup changes from yesterday are working perfectly.'
-              },
-              {
-                author: 'Josh Wise',
-                driver: 'Alex Bowman',
-                time: '5m ago',
-                content: 'Experiencing some understeer in the middle of the corner. Need to adjust front sway bar settings. Driver wants more rotation. #setup #handling'
-              },
-              {
-                author: 'Dan Jansen',
-                driver: 'Ross Chastain',
-                time: '8m ago',
-                content: 'Excellent lap times! Driver is finding speed everywhere. Very confident and smooth. This setup is dialed in perfectly for this track. #fast #confidence #setup'
-              }
-            ].map((note, index) => (
-              <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-                <div className="flex items-start space-x-3">
-                  <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                    <i className="fas fa-user text-gray-400"></i>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                      <span className="font-semibold">{note.author}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500 text-sm">{note.driver}</span>
-                      <span className="text-gray-500">•</span>
-                      <span className="text-gray-500 text-sm">{note.time}</span>
+            {/* Recent Notes Content */}
+            {loadingRecentNotes ? (
+              <div className="flex items-center justify-center py-12">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
+                  <span className="text-gray-400">Loading recent notes...</span>
+                </div>
+              </div>
+            ) : recentNotes.length > 0 ? (
+              recentNotes.map((note, index) => (
+                <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-user text-gray-400"></i>
                     </div>
-                    <p className="text-gray-200 mb-4 leading-relaxed">
-                      {note.content.split('#').map((part, i) => 
-                        i === 0 ? part : <span key={i}><span className="text-[#7cff00]">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                        <span className="font-semibold">{note['Note Taker'] || 'Unknown'}</span>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-gray-500 text-sm">{note.Driver}</span>
+                        <span className="text-gray-500">•</span>
+                        <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
+                      </div>
+                      <p className="text-gray-200 mb-4 leading-relaxed">
+                        {note.Note.split('#').map((part, i) => 
+                          i === 0 ? part : <span key={i}><span className="text-[#7cff00]">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
+                        )}
+                      </p>
+                      {note.Tags && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                            <span key={tagIndex} className="text-[#7cff00] text-xs">
+                              #{tag.trim()}
+                            </span>
+                          ))}
+                        </div>
                       )}
-                    </p>
-                    <div className="flex items-center space-x-6 text-gray-500">
-                      <button 
-                        className="flex items-center space-x-2 hover:text-white transition-colors p-2"
-                        onClick={hapticFeedback}
-                      >
-                        <i className="fas fa-comment text-sm"></i>
-                        <span className="text-sm">Reply</span>
-                      </button>
-                      <button 
-                        className="flex items-center space-x-2 hover:text-[#7cff00] transition-colors p-2"
-                        onClick={hapticFeedback}
-                      >
-                        <i className="fas fa-share text-sm"></i>
-                        <span className="text-sm">Share</span>
-                      </button>
-                      <button 
-                        className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2"
-                        onClick={hapticFeedback}
-                      >
-                        <i className="fas fa-heart text-sm"></i>
-                        <span className="text-sm">Like</span>
-                      </button>
+                      <div className="flex items-center space-x-6 text-gray-500">
+                        <button 
+                          className="flex items-center space-x-2 hover:text-white transition-colors p-2"
+                          onClick={hapticFeedback}
+                        >
+                          <i className="fas fa-comment text-sm"></i>
+                          <span className="text-sm">Reply</span>
+                        </button>
+                        <button 
+                          className="flex items-center space-x-2 hover:text-[#7cff00] transition-colors p-2"
+                          onClick={hapticFeedback}
+                        >
+                          <i className="fas fa-share text-sm"></i>
+                          <span className="text-sm">Share</span>
+                        </button>
+                        <button 
+                          className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2"
+                          onClick={hapticFeedback}
+                        >
+                          <i className="fas fa-heart text-sm"></i>
+                          <span className="text-sm">Like</span>
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
+              ))
+            ) : (
+              <div className="flex flex-col items-center justify-center py-12 text-center">
+                <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
+                <h3 className="text-lg font-semibold text-gray-400 mb-2">
+                  No Recent Notes
+                </h3>
+                <p className="text-gray-500 text-sm">
+                  Start by creating your first driver note above.
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </main>
 
