@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
+import DriverLogo from '../components/DriverLogo';
 
 interface DriverNote {
   Driver: string;
@@ -750,9 +751,7 @@ const Index = () => {
                   recentNotes.map((note, index) => (
                     <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
                       <div className="flex items-start space-x-3">
-                        <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                          <i className="fas fa-user text-gray-400"></i>
-                        </div>
+                        <DriverLogo driverName={note.Driver} size="md" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2 flex-wrap">
                             <span className="font-semibold">{note.Driver}</span>
@@ -928,9 +927,7 @@ const Index = () => {
                         {driverHistoryData.map((note, index) => (
                           <div key={index} className="bg-black rounded-2xl p-5 border border-gray-700">
                             <div className="flex items-start space-x-3">
-                              <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                                <i className="fas fa-user text-gray-400 text-sm"></i>
-                              </div>
+                              <DriverLogo driverName={note.Driver} size="md" />
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-2 flex-wrap">
                                   <span className="font-semibold text-sm">{note.Driver}</span>
@@ -1116,9 +1113,7 @@ const Index = () => {
                               {athleteNotes.map((note, index) => (
                                 <div key={index} className="bg-black rounded-xl p-4 border border-gray-700">
                                   <div className="flex items-start space-x-3">
-                                    <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center flex-shrink-0">
-                                      <i className="fas fa-user text-gray-400 text-sm"></i>
-                                    </div>
+                                    <DriverLogo driverName={note.Driver} size="md" />
                                     <div className="flex-1 min-w-0">
                                       <div className="flex items-center space-x-2 mb-2 flex-wrap">
                                         <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
