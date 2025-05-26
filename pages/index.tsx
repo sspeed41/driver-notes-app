@@ -61,6 +61,9 @@ const Index = () => {
   }>>([]);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editedProfiles, setEditedProfiles] = useState<{ [key: string]: any }>({});
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   const tagOptions = ['physical', 'psychological', 'tactical', 'technical'];
 
@@ -1005,6 +1008,72 @@ const Index = () => {
     hapticFeedback();
   };
 
+  const toggleEditMode = () => {
+    setIsEditMode(!isEditMode);
+    if (!isEditMode && selectedAthlete) {
+      // Initialize edited profile with current data
+      setEditedProfiles({
+        ...editedProfiles,
+        [selectedAthlete]: { ...athleteProfiles[selectedAthlete] }
+      });
+    }
+    hapticFeedback();
+  };
+
+  const updateProfileField = (athlete: string, field: string, value: string) => {
+    setEditedProfiles({
+      ...editedProfiles,
+      [athlete]: {
+        ...editedProfiles[athlete],
+        [field]: value
+      }
+    });
+  };
+
+  const saveProfileChanges = async () => {
+    if (!selectedAthlete || !editedProfiles[selectedAthlete]) return;
+    
+    setIsSavingProfile(true);
+    
+    try {
+      // Update the local athleteProfiles object
+      athleteProfiles[selectedAthlete] = { ...editedProfiles[selectedAthlete] };
+      
+      // Here you could also save to a backend/database if needed
+      // For now, we'll just update the local state
+      
+      setIsEditMode(false);
+      setSaveStatus({
+        success: true,
+        message: `${selectedAthlete}'s profile updated successfully!`
+      });
+      
+      // Clear save status after 3 seconds
+      setTimeout(() => setSaveStatus({}), 3000);
+      
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      setSaveStatus({
+        success: false,
+        message: 'Failed to save profile changes'
+      });
+      setTimeout(() => setSaveStatus({}), 3000);
+    }
+    
+    setIsSavingProfile(false);
+    hapticFeedback();
+  };
+
+  const cancelEdit = () => {
+    setIsEditMode(false);
+    // Remove any unsaved changes
+    if (selectedAthlete && editedProfiles[selectedAthlete]) {
+      const { [selectedAthlete]: removed, ...rest } = editedProfiles;
+      setEditedProfiles(rest);
+    }
+    hapticFeedback();
+  };
+
   return (
     <>
       <Head>
@@ -1535,16 +1604,43 @@ const Index = () => {
                           {/* Athlete Header */}
                           <div className="flex items-center space-x-4 mb-6">
                             <DriverLogo driverName={selectedAthlete} size="lg" />
-                            <div>
+                            <div className="flex-1">
                               <h3 className="text-2xl font-bold text-gray-900">{selectedAthlete}</h3>
                               <p className="text-gray-600">Professional Driver</p>
                             </div>
-                            <button
-                              onClick={() => { setSelectedAthlete(''); hapticFeedback(); }}
-                              className="ml-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-                            >
-                              ← Back to Athletes
-                            </button>
+                            <div className="flex items-center space-x-3">
+                              {isEditMode ? (
+                                <>
+                                  <button
+                                    onClick={cancelEdit}
+                                    className="px-4 py-2 text-gray-600 hover:text-gray-800 border border-gray-300 rounded-xl transition-colors"
+                                  >
+                                    Cancel
+                                  </button>
+                                  <button
+                                    onClick={saveProfileChanges}
+                                    disabled={isSavingProfile}
+                                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-colors disabled:opacity-50"
+                                  >
+                                    {isSavingProfile ? 'Saving...' : 'Save Changes'}
+                                  </button>
+                                </>
+                              ) : (
+                                <button
+                                  onClick={toggleEditMode}
+                                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-xl transition-colors flex items-center space-x-2"
+                                >
+                                  <i className="fas fa-edit text-sm"></i>
+                                  <span>Edit</span>
+                                </button>
+                              )}
+                              <button
+                                onClick={() => { setSelectedAthlete(''); hapticFeedback(); }}
+                                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                              >
+                                ← Back to Athletes
+                              </button>
+                            </div>
                           </div>
 
                           {/* Quick Stats */}
@@ -1609,15 +1705,40 @@ const Index = () => {
                                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                   <i className="fas fa-users text-blue-500 mr-2"></i>
                                   Team Information
+                                  {isEditMode && (
+                                    <span className="ml-2 text-sm text-blue-500 font-normal">
+                                      (Editing)
+                                    </span>
+                                  )}
                                 </h4>
                                 <div className="space-y-3">
                                   <div className="flex justify-between">
                                     <span className="text-gray-600">Crew Chief:</span>
-                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].crewChief || 'TBD'}</span>
+                                    {isEditMode ? (
+                                      <input
+                                        type="text"
+                                        value={editedProfiles[selectedAthlete]?.crewChief || ''}
+                                        onChange={(e) => updateProfileField(selectedAthlete, 'crewChief', e.target.value)}
+                                        className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                                        placeholder="Enter crew chief name"
+                                      />
+                                    ) : (
+                                      <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].crewChief || 'TBD'}</span>
+                                    )}
                                   </div>
                                   <div className="flex justify-between">
                                     <span className="text-gray-600">Spotter:</span>
-                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].spotter || 'TBD'}</span>
+                                    {isEditMode ? (
+                                      <input
+                                        type="text"
+                                        value={editedProfiles[selectedAthlete]?.spotter || ''}
+                                        onChange={(e) => updateProfileField(selectedAthlete, 'spotter', e.target.value)}
+                                        className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                                        placeholder="Enter spotter name"
+                                      />
+                                    ) : (
+                                      <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].spotter || 'TBD'}</span>
+                                    )}
                                   </div>
                                 </div>
                               </div>
@@ -1627,25 +1748,50 @@ const Index = () => {
                                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                                   <i className="fas fa-phone text-blue-500 mr-2"></i>
                                   Contact Information
+                                  {isEditMode && (
+                                    <span className="ml-2 text-sm text-blue-500 font-normal">
+                                      (Editing)
+                                    </span>
+                                  )}
                                 </h4>
                                 <div className="grid md:grid-cols-2 gap-4">
                                   <div className="flex items-center justify-between">
                                     <span className="text-gray-600">Phone:</span>
-                                    <a 
-                                      href={`tel:${athleteProfiles[selectedAthlete].phone}`}
-                                      className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
-                                    >
-                                      {athleteProfiles[selectedAthlete].phone}
-                                    </a>
+                                    {isEditMode ? (
+                                      <input
+                                        type="tel"
+                                        value={editedProfiles[selectedAthlete]?.phone || ''}
+                                        onChange={(e) => updateProfileField(selectedAthlete, 'phone', e.target.value)}
+                                        className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                                        placeholder="Enter phone number"
+                                      />
+                                    ) : (
+                                      <a 
+                                        href={`tel:${athleteProfiles[selectedAthlete].phone}`}
+                                        className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
+                                      >
+                                        {athleteProfiles[selectedAthlete].phone}
+                                      </a>
+                                    )}
                                   </div>
                                   <div className="flex items-center justify-between">
                                     <span className="text-gray-600">Email:</span>
-                                    <a 
-                                      href={`mailto:${athleteProfiles[selectedAthlete].email}`}
-                                      className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
-                                    >
-                                      {athleteProfiles[selectedAthlete].email}
-                                    </a>
+                                    {isEditMode ? (
+                                      <input
+                                        type="email"
+                                        value={editedProfiles[selectedAthlete]?.email || ''}
+                                        onChange={(e) => updateProfileField(selectedAthlete, 'email', e.target.value)}
+                                        className="px-2 py-1 border border-gray-300 rounded text-sm text-gray-900 bg-white"
+                                        placeholder="Enter email address"
+                                      />
+                                    ) : (
+                                      <a 
+                                        href={`mailto:${athleteProfiles[selectedAthlete].email}`}
+                                        className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
+                                      >
+                                        {athleteProfiles[selectedAthlete].email}
+                                      </a>
+                                    )}
                                   </div>
                                 </div>
                               </div>
