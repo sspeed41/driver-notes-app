@@ -1176,13 +1176,13 @@ const Index = () => {
                   <h2 className="text-lg font-semibold text-gray-900">Driver</h2>
                 </div>
                 <select 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-lg"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-lg text-gray-900 bg-white"
                   value={selectedDriver}
                   onChange={(e) => setSelectedDriver(e.target.value)}
                 >
-                  <option value="">Select driver...</option>
+                  <option value="" className="text-gray-500">Select driver...</option>
                   {drivers.map(driver => (
-                    <option key={driver} value={driver}>{driver}</option>
+                    <option key={driver} value={driver} className="text-gray-900">{driver}</option>
                   ))}
                 </select>
               </div>
@@ -1209,7 +1209,7 @@ const Index = () => {
                 
                 <div className="relative mb-4">
                   <textarea 
-                    className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors text-lg"
+                    className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors text-lg text-gray-900 bg-white placeholder-gray-500"
                     placeholder="What's happening with the driver? Tap the microphone to start voice recording or type directly..."
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
@@ -1724,7 +1724,7 @@ const Index = () => {
                       <textarea
                         value={reminderMessage}
                         onChange={(e) => setReminderMessage(e.target.value)}
-                        className="w-full h-20 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                        className="w-full h-20 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-gray-900 bg-white placeholder-gray-500"
                         placeholder="What do you want to be reminded about?"
                       />
                     </div>
@@ -1737,7 +1737,7 @@ const Index = () => {
                           type="date"
                           value={reminderDate}
                           onChange={(e) => setReminderDate(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                         />
                       </div>
                       <div>
@@ -1746,7 +1746,7 @@ const Index = () => {
                           type="time"
                           value={reminderTime}
                           onChange={(e) => setReminderTime(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 bg-white"
                         />
                       </div>
                     </div>
