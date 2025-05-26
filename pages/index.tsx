@@ -421,10 +421,10 @@ const Index = () => {
     // Set the driver to match the note being replied to
     setSelectedDriver(note.Driver);
     
-    // Pre-fill the note text with @mention
-    setNoteText(`@${note['Note Taker']}: `);
+    // Pre-fill the note text with comment format
+    setNoteText(`💬 Comment: `);
     
-    // Store the original note for appending the reply
+    // Store the original note for appending the comment
     setReplyingToNote(note);
     
     // Scroll to the note input area
@@ -448,7 +448,7 @@ const Index = () => {
     // Show feedback
     setSaveStatus({
       success: true,
-      message: `Replying to ${note['Note Taker']} about ${note.Driver} - reply will be added to original note`
+      message: 'Comment added to original note successfully!'
     });
   };
 
@@ -769,9 +769,9 @@ const Index = () => {
     setIsSaving(true);
 
     // Check if this is a reply to an existing note
-    if (replyingToNote && noteText.startsWith(`@${replyingToNote['Note Taker']}: `)) {
+    if (replyingToNote && noteText.startsWith(`💬 Comment: `)) {
       // This is a reply - append to existing note
-      const replyText = noteText.substring(`@${replyingToNote['Note Taker']}: `.length).trim();
+      const replyText = noteText.substring(`💬 Comment: `.length).trim();
       
       if (!replyText) {
         setSaveStatus({
@@ -790,7 +790,7 @@ const Index = () => {
           },
           body: JSON.stringify({ 
             originalNote: replyingToNote,
-            replyText: `@${selectedNoteTaker}: ${replyText}`,
+            replyText: replyText,
             replyAuthor: selectedNoteTaker
           }),
         });
@@ -807,7 +807,7 @@ const Index = () => {
 
         setSaveStatus({
           success: true,
-          message: 'Reply added to original note successfully!',
+          message: 'Comment added to original note successfully!',
         });
 
         // Clear the note text and reply state after successful save
@@ -1348,9 +1348,30 @@ const Index = () => {
                             <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
                           </div>
                           <p className="text-gray-700 mb-4 leading-relaxed">
-                            {note.Note.split('#').map((part, i) => 
-                              i === 0 ? part : <span key={i}><span className="text-blue-500">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
-                            )}
+                            {note.Note.split('\n\n💬').map((part, i) => {
+                              if (i === 0) {
+                                // Original note content
+                                return (
+                                  <span key={i}>
+                                    {part.split('#').map((textPart, j) => 
+                                      j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                                    )}
+                                  </span>
+                                );
+                              } else {
+                                // Comment content
+                                return (
+                                  <div key={i} className="mt-3 pl-4 border-l-2 border-gray-200 bg-gray-50 rounded-r-lg p-3">
+                                    <div className="flex items-center space-x-2 mb-1">
+                                      <i className="fas fa-comment text-gray-400 text-xs"></i>
+                                      <span className="text-xs text-gray-500 font-medium">
+                                        💬 {part}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              }
+                            })}
                           </p>
                           {note.Tags && (
                             <div className="flex flex-wrap gap-2 mb-4">
@@ -1367,7 +1388,7 @@ const Index = () => {
                               onClick={() => handleReplyToNote(note)}
                             >
                               <i className="fas fa-comment text-sm"></i>
-                              <span className="text-sm">Reply</span>
+                              <span className="text-sm">Comment</span>
                             </button>
                             <button 
                               className="flex items-center space-x-2 hover:text-blue-500 transition-colors p-2 rounded-lg hover:bg-gray-100"
