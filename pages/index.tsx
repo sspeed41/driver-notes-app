@@ -755,9 +755,9 @@ const Index = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                            <span className="font-semibold">{note['Note Taker'] || 'Unknown'}</span>
+                            <span className="font-semibold">{note.Driver}</span>
                             <span className="text-gray-500">•</span>
-                            <span className="text-gray-500 text-sm">{note.Driver}</span>
+                            <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
                             <span className="text-gray-500">•</span>
                             <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
                           </div>
@@ -933,7 +933,9 @@ const Index = () => {
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                                  <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                                  <span className="font-semibold text-sm">{note.Driver}</span>
+                                  <span className="text-gray-500">•</span>
+                                  <span className="text-gray-500 text-xs">{note['Note Taker'] || 'Unknown'}</span>
                                   <span className="text-gray-500">•</span>
                                   <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
                                 </div>
