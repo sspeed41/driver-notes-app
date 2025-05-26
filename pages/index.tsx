@@ -1404,35 +1404,15 @@ const Index = () => {
                               <span className="text-sm">Comment</span>
                             </button>
                             <button 
-                              className="flex items-center space-x-2 hover:text-blue-500 transition-colors p-2 rounded-lg hover:bg-gray-100"
-                              onClick={() => handleShareNote(note)}
-                            >
-                              <i className="fas fa-share text-sm"></i>
-                              <span className="text-sm">Share</span>
-                            </button>
-                            <button 
                               className={`flex items-center space-x-2 transition-colors p-2 rounded-lg hover:bg-gray-100 ${
                                 hasActiveReminder(index)
-                                  ? 'text-yellow-600 hover:text-yellow-700'
-                                  : 'hover:text-yellow-600'
+                                  ? 'text-yellow-400 hover:text-yellow-500'
+                                  : 'hover:text-yellow-400'
                               }`}
                               onClick={() => handleSetReminder(note)}
                             >
-                              <i className={`fas fa-bell text-sm ${hasActiveReminder(index) ? 'text-yellow-600' : ''}`}></i>
-                              <span className="text-sm">
-                                {hasActiveReminder(index) ? 'Reminder Set' : 'Remind'}
-                              </span>
-                            </button>
-                            <button 
-                              className={`flex items-center space-x-2 transition-colors p-2 rounded-lg hover:bg-gray-100 ${
-                                likedNotes.has(`note-${index}`) 
-                                  ? 'text-red-500 hover:text-red-600' 
-                                  : 'hover:text-red-500'
-                              }`}
-                              onClick={() => handleLikeNote(index)}
-                            >
-                              <i className={`${likedNotes.has(`note-${index}`) ? 'fas fa-heart' : 'far fa-heart'} text-sm`}></i>
-                              <span className="text-sm">{likedNotes.has(`note-${index}`) ? 'Liked' : 'Like'}</span>
+                              <i className={`fas fa-bell text-sm ${hasActiveReminder(index) ? 'text-yellow-400' : ''}`}></i>
+                              {!hasActiveReminder(index) && <span className="text-sm">Remind</span>}
                             </button>
                           </div>
                         </div>
