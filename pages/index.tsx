@@ -49,7 +49,12 @@ const Index = () => {
     reminderDateTime: string;
     createdBy: string;
     isCompleted: boolean;
+    isDismissed?: boolean;
   }>>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [showTagDropdown, setShowTagDropdown] = useState(false);
+
+  const tagOptions = ['physical', 'psychological', 'tactical', 'technical'];
 
   const drivers = [
     'Kyle Larson', 'Alex Bowman', 'Ross Chastain', 'Daniel Suarez', 'Austin Dillon',
@@ -319,7 +324,7 @@ const Index = () => {
       const now = new Date();
       const dueReminders = activeReminders.filter(reminder => {
         const reminderTime = new Date(reminder.reminderDateTime);
-        return !reminder.isCompleted && reminderTime <= now;
+        return !reminder.isCompleted && !reminder.isDismissed && reminderTime <= now;
       });
 
       if (dueReminders.length > 0) {
@@ -328,7 +333,7 @@ const Index = () => {
           if (Notification.permission === 'granted') {
             new Notification(`Follow-up Reminder: ${reminder.driver}`, {
               body: reminder.reminderMessage,
-              icon: '/images/Wise Logo.png'
+              icon: '/images/W.O. LOGO - small.png'
             });
           }
         });
@@ -363,6 +368,21 @@ const Index = () => {
       fetchRecentNotes();
     }
   }, [showUserSelection]);
+
+  // Close tag dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (showTagDropdown && !target.closest('.tag-dropdown-container')) {
+        setShowTagDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTagDropdown]);
 
   const handleUserSelection = (noteTaker: string) => {
     setSelectedNoteTaker(noteTaker);
@@ -457,13 +477,13 @@ const Index = () => {
     setReminderNote(note);
     setReminderMessage(`Follow up on: ${note.Note.substring(0, 50)}...`);
     
-    // Set default reminder for tomorrow at 9 AM
+    // Set default reminder for tomorrow at 7 AM
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(9, 0, 0, 0);
+    tomorrow.setHours(7, 0, 0, 0);
     
     setReminderDate(tomorrow.toISOString().split('T')[0]);
-    setReminderTime('09:00');
+    setReminderTime('07:00');
     setShowReminderModal(true);
     hapticFeedback();
   };
@@ -486,7 +506,8 @@ const Index = () => {
       reminderMessage: reminderMessage,
       reminderDateTime: reminderDateTime.toISOString(),
       createdBy: selectedNoteTaker,
-      isCompleted: false
+      isCompleted: false,
+      isDismissed: false
     };
 
     const updatedReminders = [...activeReminders, newReminder];
@@ -516,11 +537,24 @@ const Index = () => {
     hapticFeedback();
   };
 
+  const handleDismissReminder = (reminderId: string) => {
+    const updatedReminders = activeReminders.map(reminder =>
+      reminder.id === reminderId ? { ...reminder, isDismissed: true } : reminder
+    );
+    setActiveReminders(updatedReminders);
+    localStorage.setItem('activeReminders', JSON.stringify(updatedReminders));
+    hapticFeedback();
+  };
+
   const getDueReminders = () => {
     const now = new Date();
     return activeReminders.filter(reminder => {
       const reminderTime = new Date(reminder.reminderDateTime);
-      return !reminder.isCompleted && reminderTime <= now;
+      // Handle cases where isDismissed might be undefined
+      const isNotDismissed = !reminder.isDismissed;
+      const isNotCompleted = !reminder.isCompleted;
+      const isDue = reminderTime <= now;
+      return isNotCompleted && isNotDismissed && isDue;
     });
   };
 
@@ -529,9 +563,55 @@ const Index = () => {
     const next24Hours = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     return activeReminders.filter(reminder => {
       const reminderTime = new Date(reminder.reminderDateTime);
-      return !reminder.isCompleted && reminderTime > now && reminderTime <= next24Hours;
+      // Handle cases where isDismissed might be undefined
+      const isNotDismissed = !reminder.isDismissed;
+      const isNotCompleted = !reminder.isCompleted;
+      const isUpcoming = reminderTime > now && reminderTime <= next24Hours;
+      return isNotCompleted && isNotDismissed && isUpcoming;
     });
   };
+
+  const hasActiveReminder = (noteIndex: number) => {
+    const note = recentNotes[noteIndex];
+    if (!note) return false;
+    
+    return activeReminders.some(reminder => 
+      reminder.driver === note.Driver && 
+      reminder.originalNote === note.Note &&
+      !reminder.isCompleted && 
+      !reminder.isDismissed
+    );
+  };
+
+  // Clear all reminders function for testing
+  const clearAllReminders = () => {
+    setActiveReminders([]);
+    localStorage.removeItem('activeReminders');
+    setSaveStatus({
+      success: true,
+      message: 'All reminders cleared!'
+    });
+    hapticFeedback();
+  };
+
+  // Fix existing reminders that might not have isDismissed property
+  useEffect(() => {
+    const fixExistingReminders = () => {
+      const needsUpdate = activeReminders.some(reminder => reminder.isDismissed === undefined);
+      if (needsUpdate) {
+        const fixedReminders = activeReminders.map(reminder => ({
+          ...reminder,
+          isDismissed: reminder.isDismissed || false
+        }));
+        setActiveReminders(fixedReminders);
+        localStorage.setItem('activeReminders', JSON.stringify(fixedReminders));
+      }
+    };
+
+    if (activeReminders.length > 0) {
+      fixExistingReminders();
+    }
+  }, [activeReminders.length]);
 
   const fetchRecentNotes = async () => {
     setLoadingRecentNotes(true);
@@ -752,7 +832,10 @@ const Index = () => {
     const extractTags = (text: string): string[] => {
       const tagRegex = /#(\w+)/g;
       const matches = text.match(tagRegex);
-      return matches ? matches.map((tag) => tag.slice(1)) : [];
+      const textTags = matches ? matches.map((tag) => tag.slice(1)) : [];
+      // Combine text tags with selected dropdown tags
+      const allTags = textTags.concat(selectedTags);
+      return Array.from(new Set(allTags));
     };
 
     const newNote = {
@@ -790,6 +873,7 @@ const Index = () => {
 
       // Clear the note text after successful save
       setNoteText('');
+      setSelectedTags([]);
       
       // Refresh recent notes to show the new note
       fetchRecentNotes();
@@ -900,6 +984,19 @@ const Index = () => {
     return `${diffDays}d ago`;
   };
 
+  const handleTagSelect = (tag: string) => {
+    if (selectedTags.includes(tag)) {
+      setSelectedTags(selectedTags.filter(t => t !== tag));
+    } else {
+      setSelectedTags([...selectedTags, tag]);
+    }
+  };
+
+  const toggleTagDropdown = () => {
+    setShowTagDropdown(!showTagDropdown);
+    hapticFeedback();
+  };
+
   return (
     <>
       <Head>
@@ -911,18 +1008,18 @@ const Index = () => {
       <div className="bg-black text-white min-h-screen">
         {/* User Selection Screen */}
         {showUserSelection ? (
-          <div className="min-h-screen flex flex-col items-center justify-center px-4">
+          <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-gray-50">
             {/* Logo and Title */}
             <div className="text-center mb-12">
               <div className="flex items-center justify-center mb-6">
                 <img 
-                  src="/images/Wise Logo.png" 
-                  alt="Wise Optimization" 
+                  src="/images/W.O. LOGO - small.png" 
+                  alt="W.O. Optimization" 
                   className="w-40 h-auto max-h-16"
                 />
               </div>
-              <h1 className="text-3xl font-bold mb-4">Driver Notes</h1>
-              <p className="text-gray-400 text-lg">Who are you?</p>
+              <h1 className="text-3xl font-bold mb-4 text-gray-900">Driver Notes</h1>
+              <p className="text-gray-600 text-lg">Who are you?</p>
             </div>
 
             {/* User Selection Buttons */}
@@ -931,20 +1028,20 @@ const Index = () => {
                 <button
                   key={noteTaker}
                   onClick={() => handleUserSelection(noteTaker)}
-                  className="w-full p-6 bg-gray-900 hover:bg-gray-800 border border-gray-700 hover:border-[#7cff00] rounded-2xl transition-all duration-200 text-left group"
+                  className="w-full p-6 bg-white hover:bg-gray-50 border border-gray-200 hover:border-blue-500 rounded-2xl transition-all duration-200 text-left group shadow-sm"
                 >
                   <div className="flex items-center space-x-4">
-                    <div className="w-12 h-12 bg-[#7cff00] rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <i className="fas fa-user text-black text-lg"></i>
+                    <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                      <i className="fas fa-user text-white text-lg"></i>
                     </div>
                     <div>
-                      <h3 className="text-xl font-semibold text-white group-hover:text-[#7cff00] transition-colors">
+                      <h3 className="text-xl font-semibold text-gray-900 group-hover:text-blue-500 transition-colors">
                         {noteTaker}
                       </h3>
-                      <p className="text-gray-400 text-sm">Tap to continue</p>
+                      <p className="text-gray-500 text-sm">Tap to continue</p>
                     </div>
                     <div className="ml-auto">
-                      <i className="fas fa-chevron-right text-gray-400 group-hover:text-[#7cff00] transition-colors"></i>
+                      <i className="fas fa-chevron-right text-gray-400 group-hover:text-blue-500 transition-colors"></i>
                     </div>
                   </div>
                 </button>
@@ -959,36 +1056,44 @@ const Index = () => {
             </div>
           </div>
         ) : (
-          <>
-            {/* Mobile Header */}
-            <header className="border-b border-gray-800 sticky top-0 bg-black z-50">
-              <div className="px-4 py-3">
+          <div className="min-h-screen bg-gray-50">
+            {/* Clean Header */}
+            <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+              <div className="max-w-4xl mx-auto px-4 py-4">
                 <div className="flex items-center justify-between">
                   {/* Logo and Title */}
-                  <div className="flex items-center space-x-3">
-                    <div className="flex items-center justify-center">
-                      <img 
-                        src="/images/Wise Logo.png" 
-                        alt="Wise Optimization" 
-                        className="w-20 h-auto max-h-8"
-                      />
-                    </div>
+                  <div className="flex items-center space-x-4">
+                    <img 
+                      src="/images/W.O. LOGO - small.png" 
+                      alt="W.O." 
+                      className="w-10 h-10 object-contain"
+                    />
                     <div>
-                      <h1 className="text-lg font-bold">Driver Notes</h1>
-                      <p className="text-gray-500 text-xs">
-                        {selectedNoteTaker} • Real-time analytics
+                      <h1 className="text-xl font-semibold text-gray-900">Driver Notes</h1>
+                      <p className="text-sm text-gray-500">
+                        {selectedNoteTaker} • Live
                       </p>
                     </div>
                   </div>
                   
                   {/* Status and Menu */}
                   <div className="flex items-center space-x-3">
-                    <div className="flex items-center space-x-1">
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-gray-400">Live</span>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <span className="text-sm text-gray-500">Connected</span>
                     </div>
+                    {/* Clear Reminders Button (for testing) */}
+                    {activeReminders.length > 0 && (
+                      <button 
+                        className="p-2 text-gray-400 hover:text-red-500 rounded-lg hover:bg-gray-100" 
+                        onClick={clearAllReminders}
+                        title="Clear all reminders"
+                      >
+                        <i className="fas fa-bell-slash"></i>
+                      </button>
+                    )}
                     <button 
-                      className="p-2 text-gray-400 hover:text-white" 
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100" 
                       onClick={handleChangeUser}
                     >
                       <i className="fas fa-user-cog"></i>
@@ -999,32 +1104,40 @@ const Index = () => {
             </header>
 
             {/* Main Content */}
-            <main className="px-4 py-4 pb-24">
+            <main className="max-w-4xl mx-auto px-4 py-6 pb-24">
               {/* Due Reminders Alert */}
               {getDueReminders().length > 0 && (
-                <div className="mb-6 bg-yellow-900/50 border border-yellow-600 rounded-2xl p-4">
+                <div className="mb-6 bg-yellow-50 border border-yellow-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3 mb-3">
-                    <i className="fas fa-bell text-yellow-500 text-lg"></i>
-                    <h3 className="text-lg font-semibold text-yellow-400">
+                    <i className="fas fa-bell text-yellow-600 text-lg"></i>
+                    <h3 className="text-lg font-semibold text-yellow-800">
                       {getDueReminders().length} Follow-up{getDueReminders().length > 1 ? 's' : ''} Due
                     </h3>
                   </div>
                   <div className="space-y-2">
                     {getDueReminders().map((reminder) => (
-                      <div key={reminder.id} className="flex items-center justify-between bg-black/30 rounded-xl p-3">
+                      <div key={reminder.id} className="flex items-center justify-between bg-white rounded-xl p-3 border border-yellow-100">
                         <div className="flex-1">
-                          <p className="text-white font-medium">{reminder.driver}</p>
-                          <p className="text-gray-300 text-sm">{reminder.reminderMessage}</p>
-                          <p className="text-gray-400 text-xs">
+                          <p className="text-gray-900 font-medium">{reminder.driver}</p>
+                          <p className="text-gray-600 text-sm">{reminder.reminderMessage}</p>
+                          <p className="text-gray-500 text-xs">
                             Due: {new Date(reminder.reminderDateTime).toLocaleString()}
                           </p>
                         </div>
-                        <button
-                          onClick={() => handleCompleteReminder(reminder.id)}
-                          className="ml-3 px-3 py-1 bg-[#7cff00] hover:bg-[#6be600] text-black text-sm font-medium rounded-lg transition-colors"
-                        >
-                          Complete
-                        </button>
+                        <div className="flex space-x-2 ml-3">
+                          <button
+                            onClick={() => handleDismissReminder(reminder.id)}
+                            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium rounded-lg transition-colors"
+                          >
+                            Dismiss
+                          </button>
+                          <button
+                            onClick={() => handleCompleteReminder(reminder.id)}
+                            className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm font-medium rounded-lg transition-colors"
+                          >
+                            Complete
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -1033,20 +1146,20 @@ const Index = () => {
 
               {/* Upcoming Reminders */}
               {getUpcomingReminders().length > 0 && (
-                <div className="mb-6 bg-blue-900/30 border border-blue-600 rounded-2xl p-4">
+                <div className="mb-6 bg-blue-50 border border-blue-200 rounded-2xl p-4 shadow-sm">
                   <div className="flex items-center space-x-3 mb-3">
-                    <i className="fas fa-clock text-blue-400 text-lg"></i>
-                    <h3 className="text-lg font-semibold text-blue-400">
+                    <i className="fas fa-clock text-blue-600 text-lg"></i>
+                    <h3 className="text-lg font-semibold text-blue-800">
                       Upcoming Reminders (Next 24h)
                     </h3>
                   </div>
                   <div className="space-y-2">
                     {getUpcomingReminders().map((reminder) => (
-                      <div key={reminder.id} className="flex items-center justify-between bg-black/30 rounded-xl p-3">
+                      <div key={reminder.id} className="flex items-center justify-between bg-white rounded-xl p-3 border border-blue-100">
                         <div className="flex-1">
-                          <p className="text-white font-medium">{reminder.driver}</p>
-                          <p className="text-gray-300 text-sm">{reminder.reminderMessage}</p>
-                          <p className="text-gray-400 text-xs">
+                          <p className="text-gray-900 font-medium">{reminder.driver}</p>
+                          <p className="text-gray-600 text-sm">{reminder.reminderMessage}</p>
+                          <p className="text-gray-500 text-xs">
                             Scheduled: {new Date(reminder.reminderDateTime).toLocaleString()}
                           </p>
                         </div>
@@ -1056,40 +1169,37 @@ const Index = () => {
                 </div>
               )}
 
-              {/* Quick Selection Cards */}
-              <div className="space-y-4 mb-6">
-                {/* Driver Selection */}
-                <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
-                    <h2 className="text-lg font-semibold">Driver</h2>
-                  </div>
-                  <select 
-                    className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                    value={selectedDriver}
-                    onChange={(e) => setSelectedDriver(e.target.value)}
-                  >
-                    <option value="">Select driver...</option>
-                    {drivers.map(driver => (
-                      <option key={driver} value={driver}>{driver}</option>
-                    ))}
-                  </select>
+              {/* Driver Selection */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <i className="fas fa-user-circle text-blue-500 text-xl"></i>
+                  <h2 className="text-lg font-semibold text-gray-900">Driver</h2>
                 </div>
+                <select 
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-lg"
+                  value={selectedDriver}
+                  onChange={(e) => setSelectedDriver(e.target.value)}
+                >
+                  <option value="">Select driver...</option>
+                  {drivers.map(driver => (
+                    <option key={driver} value={driver}>{driver}</option>
+                  ))}
+                </select>
               </div>
 
               {/* Note Input Section */}
-              <div className="bg-gray-900 rounded-2xl p-5 border border-gray-800 mb-6 note-input-section">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6 note-input-section">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center space-x-3">
-                    <i className="fas fa-microphone text-[#7cff00] text-xl"></i>
-                    <h2 className="text-lg font-semibold">Voice Notes</h2>
+                    <i className="fas fa-microphone text-blue-500 text-xl"></i>
+                    <h2 className="text-lg font-semibold text-gray-900">Voice Notes</h2>
                   </div>
                   <button 
                     onClick={() => { handleRecord(); hapticFeedback(); }}
                     className={`flex items-center space-x-2 px-4 py-3 rounded-xl transition-colors ${
                       isRecording 
-                        ? 'bg-red-600 hover:bg-red-700' 
-                        : 'bg-gray-800 hover:bg-gray-700'
+                        ? 'bg-red-500 hover:bg-red-600 text-white' 
+                        : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
                     }`}
                   >
                     <i className={`fas ${isRecording ? 'fa-stop' : 'fa-microphone'} text-sm`}></i>
@@ -1099,7 +1209,7 @@ const Index = () => {
                 
                 <div className="relative mb-4">
                   <textarea 
-                    className="w-full h-32 p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none transition-colors text-lg"
+                    className="w-full h-32 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-colors text-lg"
                     placeholder="What's happening with the driver? Tap the microphone to start voice recording or type directly..."
                     value={noteText}
                     onChange={(e) => setNoteText(e.target.value)}
@@ -1117,15 +1227,44 @@ const Index = () => {
                 {/* Action buttons */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
+                    <div className="relative tag-dropdown-container">
+                      <button 
+                        className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
+                        onClick={toggleTagDropdown}
+                      >
+                        <i className="fas fa-hashtag"></i>
+                        <span className="text-sm">Tags</span>
+                        {selectedTags.length > 0 && (
+                          <span className="bg-blue-500 text-white text-xs rounded-full px-2 py-1 ml-1">
+                            {selectedTags.length}
+                          </span>
+                        )}
+                      </button>
+                      
+                      {/* Tag Dropdown */}
+                      {showTagDropdown && (
+                        <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-10 min-w-48">
+                          <div className="p-3">
+                            <p className="text-sm font-medium text-gray-700 mb-2">Select Tags:</p>
+                            <div className="space-y-2">
+                              {tagOptions.map((tag) => (
+                                <label key={tag} className="flex items-center space-x-2 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={selectedTags.includes(tag)}
+                                    onChange={() => handleTagSelect(tag)}
+                                    className="rounded border-gray-300 text-blue-500 focus:ring-blue-500"
+                                  />
+                                  <span className="text-sm text-gray-700">#{tag}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
                     <button 
-                      className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
-                      onClick={hapticFeedback}
-                    >
-                      <i className="fas fa-hashtag"></i>
-                      <span className="text-sm">Tags</span>
-                    </button>
-                    <button 
-                      className="flex items-center space-x-2 text-gray-400 hover:text-white transition-colors p-2"
+                      className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 transition-colors p-2 rounded-lg hover:bg-gray-100"
                       onClick={hapticFeedback}
                     >
                       <i className="fas fa-clock"></i>
@@ -1134,7 +1273,7 @@ const Index = () => {
                   </div>
                   
                   <button 
-                    className="px-6 py-3 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-full transition-colors disabled:opacity-50 text-lg"
+                    className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 text-lg"
                     onClick={() => { handleSaveNote(); hapticFeedback(); }}
                     disabled={isSaving || !selectedDriver || !noteText.trim()}
                   >
@@ -1142,11 +1281,31 @@ const Index = () => {
                   </button>
                 </div>
 
+                {/* Selected Tags Display */}
+                {selectedTags.length > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {selectedTags.map((tag) => (
+                      <span 
+                        key={tag} 
+                        className="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm"
+                      >
+                        #{tag}
+                        <button
+                          onClick={() => handleTagSelect(tag)}
+                          className="ml-2 text-blue-500 hover:text-blue-700"
+                        >
+                          <i className="fas fa-times text-xs"></i>
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+
                 {/* Save Status */}
                 {saveStatus.message && (
                   <div
                     className={`mt-4 p-3 rounded-xl ${
-                      saveStatus.success ? 'bg-green-800/50 text-green-200' : 'bg-red-800/50 text-red-200'
+                      saveStatus.success ? 'bg-green-50 text-green-700 border border-green-200' : 'bg-red-50 text-red-700 border border-red-200'
                     }`}
                   >
                     {saveStatus.message}
@@ -1157,9 +1316,9 @@ const Index = () => {
               {/* Recent Notes Feed */}
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xl font-bold">Recent Notes</h3>
+                  <h3 className="text-xl font-bold text-gray-900">Recent Notes</h3>
                   <button 
-                    className="text-gray-400 hover:text-white p-2" 
+                    className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100" 
                     onClick={() => { fetchRecentNotes(); hapticFeedback(); }}
                     disabled={loadingRecentNotes}
                   >
@@ -1171,32 +1330,32 @@ const Index = () => {
                 {loadingRecentNotes ? (
                   <div className="flex items-center justify-center py-12">
                     <div className="flex items-center space-x-3">
-                      <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
-                      <span className="text-gray-400">Loading recent notes...</span>
+                      <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      <span className="text-gray-600">Loading recent notes...</span>
                     </div>
                   </div>
                 ) : recentNotes.length > 0 ? (
                   recentNotes.map((note, index) => (
-                    <div key={index} className="bg-gray-900 rounded-2xl p-5 border border-gray-800 transition-colors">
-                      <div className="flex items-start space-x-3">
+                    <div key={index} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-colors">
+                      <div className="flex items-start space-x-4">
                         <DriverLogo driverName={note.Driver} size="md" />
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                            <span className="font-semibold">{note.Driver}</span>
-                            <span className="text-gray-500">•</span>
+                            <span className="font-semibold text-gray-900">{note.Driver}</span>
+                            <span className="text-gray-400">•</span>
                             <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
-                            <span className="text-gray-500">•</span>
+                            <span className="text-gray-400">•</span>
                             <span className="text-gray-500 text-sm">{formatTimestamp(note.Timestamp)}</span>
                           </div>
-                          <p className="text-gray-200 mb-4 leading-relaxed">
+                          <p className="text-gray-700 mb-4 leading-relaxed">
                             {note.Note.split('#').map((part, i) => 
-                              i === 0 ? part : <span key={i}><span className="text-[#7cff00]">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
+                              i === 0 ? part : <span key={i}><span className="text-blue-500">#{part.split(' ')[0]}</span>{part.substring(part.indexOf(' '))}</span>
                             )}
                           </p>
                           {note.Tags && (
                             <div className="flex flex-wrap gap-2 mb-4">
                               {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                <span key={tagIndex} className="text-[#7cff00] text-xs">
+                                <span key={tagIndex} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
                                   #{tag.trim()}
                                 </span>
                               ))}
@@ -1204,30 +1363,36 @@ const Index = () => {
                           )}
                           <div className="flex items-center space-x-6 text-gray-500">
                             <button 
-                              className="flex items-center space-x-2 hover:text-white transition-colors p-2"
+                              className="flex items-center space-x-2 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
                               onClick={() => handleReplyToNote(note)}
                             >
                               <i className="fas fa-comment text-sm"></i>
                               <span className="text-sm">Reply</span>
                             </button>
                             <button 
-                              className="flex items-center space-x-2 hover:text-[#7cff00] transition-colors p-2"
+                              className="flex items-center space-x-2 hover:text-blue-500 transition-colors p-2 rounded-lg hover:bg-gray-100"
                               onClick={() => handleShareNote(note)}
                             >
                               <i className="fas fa-share text-sm"></i>
                               <span className="text-sm">Share</span>
                             </button>
                             <button 
-                              className="flex items-center space-x-2 hover:text-yellow-500 transition-colors p-2"
+                              className={`flex items-center space-x-2 transition-colors p-2 rounded-lg hover:bg-gray-100 ${
+                                hasActiveReminder(index)
+                                  ? 'text-yellow-600 hover:text-yellow-700'
+                                  : 'hover:text-yellow-600'
+                              }`}
                               onClick={() => handleSetReminder(note)}
                             >
-                              <i className="fas fa-bell text-sm"></i>
-                              <span className="text-sm">Remind</span>
+                              <i className={`fas fa-bell text-sm ${hasActiveReminder(index) ? 'text-yellow-600' : ''}`}></i>
+                              <span className="text-sm">
+                                {hasActiveReminder(index) ? 'Reminder Set' : 'Remind'}
+                              </span>
                             </button>
                             <button 
-                              className={`flex items-center space-x-2 transition-colors p-2 ${
+                              className={`flex items-center space-x-2 transition-colors p-2 rounded-lg hover:bg-gray-100 ${
                                 likedNotes.has(`note-${index}`) 
-                                  ? 'text-red-500 hover:text-red-400' 
+                                  ? 'text-red-500 hover:text-red-600' 
                                   : 'hover:text-red-500'
                               }`}
                               onClick={() => handleLikeNote(index)}
@@ -1242,8 +1407,8 @@ const Index = () => {
                   ))
                 ) : (
                   <div className="flex flex-col items-center justify-center py-12 text-center">
-                    <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
-                    <h3 className="text-lg font-semibold text-gray-400 mb-2">
+                    <i className="fas fa-clipboard-list text-gray-400 text-4xl mb-4"></i>
+                    <h3 className="text-lg font-semibold text-gray-600 mb-2">
                       No Recent Notes
                     </h3>
                     <p className="text-gray-500 text-sm">
@@ -1255,21 +1420,21 @@ const Index = () => {
             </main>
 
             {/* Bottom Navigation */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-black border-t border-gray-800">
+            <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg">
               <div className="flex items-center justify-around py-3">
                 <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
-                  <i className="fas fa-home text-[#7cff00] text-lg"></i>
-                  <span className="text-xs text-gray-400">Home</span>
+                  <i className="fas fa-home text-blue-500 text-lg"></i>
+                  <span className="text-xs text-gray-500">Home</span>
                 </button>
                 <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
                   <i className="fas fa-search text-gray-400 text-lg"></i>
-                  <span className="text-xs text-gray-400">Search</span>
+                  <span className="text-xs text-gray-500">Search</span>
                 </button>
                 <button className="flex flex-col items-center space-y-1 p-2 relative" onClick={hapticFeedback}>
-                  <div className="w-12 h-12 bg-[#7cff00] rounded-full flex items-center justify-center">
-                    <i className="fas fa-plus text-black text-lg"></i>
+                  <div className="w-12 h-12 bg-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                    <i className="fas fa-plus text-white text-lg"></i>
                   </div>
-                  <span className="text-xs text-gray-400">Note</span>
+                  <span className="text-xs text-gray-500">Note</span>
                 </button>
                 <button 
                   className="flex flex-col items-center space-y-1 p-2" 
@@ -1279,413 +1444,223 @@ const Index = () => {
                   }}
                 >
                   <i className="fas fa-users text-gray-400 text-lg"></i>
-                  <span className="text-xs text-gray-400">Athletes</span>
+                  <span className="text-xs text-gray-500">Athletes</span>
                 </button>
                 <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
                   <i className="fas fa-cog text-gray-400 text-lg"></i>
-                  <span className="text-xs text-gray-400">Settings</span>
+                  <span className="text-xs text-gray-500">Settings</span>
                 </button>
               </div>
             </nav>
 
-            {/* Recording Indicator */}
-            {isRecording && (
-              <div className="fixed top-20 left-4 right-4 bg-red-600 text-white p-3 rounded-xl z-40">
-                <div className="flex items-center space-x-3">
-                  <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-                  <span className="font-semibold">Recording...</span>
-                  <span className="text-sm">Speak clearly</span>
-                </div>
-              </div>
-            )}
-
-            {/* Driver History Modal */}
-            {showDriverHistory && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-                <div className="bg-gray-900 w-full h-5/6 rounded-t-3xl border-t border-gray-700">
-                  {/* Modal Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
-                    <div className="flex items-center space-x-3">
-                      <i className="fas fa-history text-[#7cff00] text-xl"></i>
-                      <div>
-                        <h2 className="text-xl font-bold">Driver History</h2>
-                        <p className="text-gray-400 text-sm">
-                          {historyDriver || 'Select a driver to view history'}
-                        </p>
-                      </div>
-                    </div>
-                    <button 
-                      onClick={() => { setShowDriverHistory(false); hapticFeedback(); }}
-                      className="p-2 text-gray-400 hover:text-white"
-                    >
-                      <i className="fas fa-times text-xl"></i>
-                    </button>
-                  </div>
-
-                  {/* Driver Selector */}
-                  <div className="p-6 border-b border-gray-700">
-                    <select 
-                      className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                      value={historyDriver}
-                      onChange={(e) => {
-                        setHistoryDriver(e.target.value);
-                        fetchDriverHistory(e.target.value);
-                      }}
-                    >
-                      <option value="">Select driver to view history...</option>
-                      {drivers.map(driver => (
-                        <option key={driver} value={driver}>{driver}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* History Content */}
-                  <div className="flex-1 overflow-y-auto p-6">
-                    {loadingHistory ? (
-                      <div className="flex items-center justify-center py-12">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-gray-400">Loading driver history...</span>
-                        </div>
-                      </div>
-                    ) : driverHistoryData.length > 0 ? (
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between mb-4">
-                          <h3 className="text-lg font-semibold">
-                            Latest Notes ({driverHistoryData.length})
-                          </h3>
-                          <span className="text-sm text-gray-400">
-                            From Google Sheets
-                          </span>
-                        </div>
-                        
-                        {driverHistoryData.map((note, index) => (
-                          <div key={index} className="bg-black rounded-2xl p-5 border border-gray-700">
-                            <div className="flex items-start space-x-3">
-                              <DriverLogo driverName={note.Driver} size="md" />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                                  <span className="font-semibold text-sm">{note.Driver}</span>
-                                  <span className="text-gray-500">•</span>
-                                  <span className="text-gray-500 text-xs">{note['Note Taker'] || 'Unknown'}</span>
-                                  <span className="text-gray-500">•</span>
-                                  <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
-                                </div>
-                                <p className="text-gray-200 text-sm leading-relaxed mb-3">
-                                  {note.Note}
-                                </p>
-                                {note.Tags && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                      <span key={tagIndex} className="text-[#7cff00] text-xs">
-                                        #{tag.trim()}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    ) : historyDriver ? (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
-                        <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                          No Notes Found
-                        </h3>
-                        <p className="text-gray-500 text-sm">
-                          No notes found for {historyDriver} in the database.
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-12 text-center">
-                        <i className="fas fa-user-circle text-gray-600 text-4xl mb-4"></i>
-                        <h3 className="text-lg font-semibold text-gray-400 mb-2">
-                          Select a Driver
-                        </h3>
-                        <p className="text-gray-500 text-sm">
-                          Choose a driver from the dropdown above to view their note history.
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Athlete Dashboard Modal */}
             {showAthleteDashboard && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-end">
-                <div className="bg-gray-900 w-full h-full rounded-t-3xl border-t border-gray-700 flex flex-col">
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+                <div className="bg-white w-full max-w-4xl h-full max-h-[90vh] rounded-2xl shadow-xl border border-gray-200 flex flex-col">
                   {/* Modal Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700 flex-shrink-0">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-white rounded-t-2xl">
                     <div className="flex items-center space-x-3">
-                      <i className="fas fa-user-circle text-[#7cff00] text-xl"></i>
+                      <i className="fas fa-users text-blue-500 text-xl"></i>
                       <div>
-                        <h2 className="text-xl font-bold">Athlete Dashboard</h2>
-                        <p className="text-gray-400 text-sm">
-                          {selectedAthlete || 'Select an athlete to view dashboard'}
-                        </p>
+                        <h2 className="text-xl font-bold text-gray-900">Athletes Dashboard</h2>
+                        <p className="text-gray-600 text-sm">Select an athlete to view their profile</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => { setShowAthleteDashboard(false); hapticFeedback(); }}
-                      className="p-2 text-gray-400 hover:text-white"
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                     >
                       <i className="fas fa-times text-xl"></i>
                     </button>
                   </div>
 
-                  {/* Athlete Selector */}
-                  <div className="p-6 border-b border-gray-700 flex-shrink-0">
-                    <select 
-                      className="w-full p-4 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none transition-colors text-lg"
-                      value={selectedAthlete}
-                      onChange={(e) => {
-                        setSelectedAthlete(e.target.value);
-                        fetchAthleteData(e.target.value);
-                      }}
-                    >
-                      <option value="">Select athlete...</option>
-                      {drivers.map(driver => (
-                        <option key={driver} value={driver}>{driver}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Dashboard Content */}
-                  <div className="flex-1 overflow-y-auto min-h-0">
+                  {/* Modal Content */}
+                  <div className="flex-1 overflow-hidden">
                     {selectedAthlete ? (
-                      <div className="space-y-6 pb-6">
-                        {/* Athlete Profile Header */}
-                        <div className="p-6 space-y-6">
-                          <div className="flex items-center space-x-4">
-                            <DriverLogo driverName={selectedAthlete} size="xl" />
+                      /* Individual Athlete Profile */
+                      <div className="h-full overflow-y-auto">
+                        <div className="p-6">
+                          {/* Athlete Header */}
+                          <div className="flex items-center space-x-4 mb-6">
+                            <DriverLogo driverName={selectedAthlete} size="lg" />
                             <div>
-                              <h3 className="text-2xl font-bold text-white">{selectedAthlete}</h3>
-                              <p className="text-gray-400">
-                                {athleteProfiles[selectedAthlete] ? `Age ${athleteProfiles[selectedAthlete].age}` : 'Professional Driver'}
-                              </p>
+                              <h3 className="text-2xl font-bold text-gray-900">{selectedAthlete}</h3>
+                              <p className="text-gray-600">Professional Driver</p>
                             </div>
-                          </div>
-                        </div>
-
-                        {/* Profile Information */}
-                        {athleteProfiles[selectedAthlete] && (
-                          <div className="p-6 space-y-6">
-                            <h3 className="text-lg font-semibold text-white mb-4">Profile Information</h3>
-                            
-                            {/* Personal Details */}
-                            <div className="bg-black rounded-xl p-6 border border-gray-700">
-                              <h4 className="text-md font-semibold text-[#7cff00] mb-4 flex items-center">
-                                <i className="fas fa-user mr-2"></i>
-                                Personal Details
-                              </h4>
-                              <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                  <p className="text-gray-400 text-sm">Age</p>
-                                  <p className="text-white font-medium">{athleteProfiles[selectedAthlete].age} years old</p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Birthday</p>
-                                  <p className="text-white font-medium">{athleteProfiles[selectedAthlete].birthday}</p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Gym Time</p>
-                                  <p className="text-white font-medium">{athleteProfiles[selectedAthlete].gymTime}</p>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Team Information */}
-                            <div className="bg-black rounded-xl p-6 border border-gray-700">
-                              <h4 className="text-md font-semibold text-[#7cff00] mb-4 flex items-center">
-                                <i className="fas fa-users mr-2"></i>
-                                Team Information
-                              </h4>
-                              <div className="grid grid-cols-1 gap-4">
-                                {athleteProfiles[selectedAthlete].crewChief && (
-                                  <div>
-                                    <p className="text-gray-400 text-sm">Crew Chief</p>
-                                    <p className="text-white font-medium">{athleteProfiles[selectedAthlete].crewChief}</p>
-                                  </div>
-                                )}
-                                {athleteProfiles[selectedAthlete].spotter && (
-                                  <div>
-                                    <p className="text-gray-400 text-sm">Spotter</p>
-                                    <p className="text-white font-medium">{athleteProfiles[selectedAthlete].spotter}</p>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Contact Information */}
-                            <div className="bg-black rounded-xl p-6 border border-gray-700">
-                              <h4 className="text-md font-semibold text-[#7cff00] mb-4 flex items-center">
-                                <i className="fas fa-address-book mr-2"></i>
-                                Contact Information
-                              </h4>
-                              <div className="space-y-4">
-                                <div>
-                                  <p className="text-gray-400 text-sm">Phone</p>
-                                  <a 
-                                    href={`tel:${athleteProfiles[selectedAthlete].phone}`}
-                                    className="text-[#7cff00] font-medium hover:text-[#6be600] transition-colors"
-                                  >
-                                    {athleteProfiles[selectedAthlete].phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3')}
-                                  </a>
-                                </div>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Email</p>
-                                  <a 
-                                    href={`mailto:${athleteProfiles[selectedAthlete].email}`}
-                                    className="text-[#7cff00] font-medium hover:text-[#6be600] transition-colors break-all"
-                                  >
-                                    {athleteProfiles[selectedAthlete].email}
-                                  </a>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Quick Stats Cards */}
-                        <div className="p-6 space-y-4">
-                          <h3 className="text-lg font-semibold text-white mb-4">Quick Stats</h3>
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="bg-black rounded-xl p-4 border border-gray-700">
-                              <div className="flex items-center space-x-3">
-                                <i className="fas fa-trophy text-[#7cff00] text-lg"></i>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Next Race</p>
-                                  <p className="text-white font-semibold">TBD</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-black rounded-xl p-4 border border-gray-700">
-                              <div className="flex items-center space-x-3">
-                                <i className="fas fa-calendar text-[#7cff00] text-lg"></i>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Last Race</p>
-                                  <p className="text-white font-semibold">TBD</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-black rounded-xl p-4 border border-gray-700">
-                              <div className="flex items-center space-x-3">
-                                <i className="fas fa-chart-line text-[#7cff00] text-lg"></i>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Avg Finish</p>
-                                  <p className="text-white font-semibold">TBD</p>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-black rounded-xl p-4 border border-gray-700">
-                              <div className="flex items-center space-x-3">
-                                <i className="fas fa-star text-[#7cff00] text-lg"></i>
-                                <div>
-                                  <p className="text-gray-400 text-sm">Points</p>
-                                  <p className="text-white font-semibold">TBD</p>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Calendar Section */}
-                        <div className="p-6 border-t border-gray-700">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-white">Race Calendar</h3>
-                            <button className="text-[#7cff00] text-sm hover:text-[#6be600] transition-colors">
-                              <i className="fas fa-plus mr-2"></i>Add Race
-                            </button>
-                          </div>
-                          <div className="bg-black rounded-xl p-6 border border-gray-700">
-                            <div className="text-center py-8">
-                              <i className="fas fa-calendar-alt text-gray-600 text-4xl mb-4"></i>
-                              <h4 className="text-lg font-semibold text-gray-400 mb-2">
-                                Calendar Coming Soon
-                              </h4>
-                              <p className="text-gray-500 text-sm">
-                                Race schedule and calendar integration will be available here
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Recent Notes Section */}
-                        <div className="p-6 border-t border-gray-700">
-                          <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-semibold text-white">
-                              Recent Notes ({athleteNotes.length})
-                            </h3>
-                            <button 
-                              className="text-[#7cff00] text-sm hover:text-[#6be600] transition-colors"
-                              onClick={() => fetchAthleteData(selectedAthlete)}
+                            <button
+                              onClick={() => { setSelectedAthlete(''); hapticFeedback(); }}
+                              className="ml-auto px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                             >
-                              <i className="fas fa-refresh mr-2"></i>Refresh
+                              ← Back to Athletes
                             </button>
                           </div>
-                          
-                          {loadingAthleteData ? (
-                            <div className="flex items-center justify-center py-12">
-                              <div className="flex items-center space-x-3">
-                                <div className="w-6 h-6 border-2 border-[#7cff00] border-t-transparent rounded-full animate-spin"></div>
-                                <span className="text-gray-400">Loading athlete notes...</span>
+
+                          {/* Quick Stats */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <i className="fas fa-calendar text-blue-500"></i>
+                                <span className="text-sm font-medium text-gray-600">Next Race</span>
                               </div>
+                              <p className="text-lg font-bold text-gray-900">TBD</p>
                             </div>
-                          ) : athleteNotes.length > 0 ? (
-                            <div className="space-y-4">
-                              {athleteNotes.map((note, index) => (
-                                <div key={index} className="bg-black rounded-xl p-4 border border-gray-700">
-                                  <div className="flex items-start space-x-3">
-                                    <DriverLogo driverName={note.Driver} size="md" />
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                                        <span className="font-semibold text-sm">{note['Note Taker'] || 'Unknown'}</span>
-                                        <span className="text-gray-500">•</span>
-                                        <span className="text-gray-500 text-xs">{formatTimestamp(note.Timestamp)}</span>
-                                      </div>
-                                      <p className="text-gray-200 text-sm leading-relaxed mb-3">
-                                        {note.Note}
-                                      </p>
-                                      {note.Tags && (
-                                        <div className="flex flex-wrap gap-2">
-                                          {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                            <span key={tagIndex} className="text-[#7cff00] text-xs">
-                                              #{tag.trim()}
-                                            </span>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <i className="fas fa-flag-checkered text-blue-500"></i>
+                                <span className="text-sm font-medium text-gray-600">Last Race</span>
+                              </div>
+                              <p className="text-lg font-bold text-gray-900">TBD</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <i className="fas fa-trophy text-blue-500"></i>
+                                <span className="text-sm font-medium text-gray-600">Avg Finish</span>
+                              </div>
+                              <p className="text-lg font-bold text-gray-900">TBD</p>
+                            </div>
+                            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                              <div className="flex items-center space-x-2 mb-2">
+                                <i className="fas fa-star text-blue-500"></i>
+                                <span className="text-sm font-medium text-gray-600">Points</span>
+                              </div>
+                              <p className="text-lg font-bold text-gray-900">TBD</p>
+                            </div>
+                          </div>
+
+                          {/* Athlete Details */}
+                          {athleteProfiles[selectedAthlete] && (
+                            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                              {/* Personal Info */}
+                              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                  <i className="fas fa-user text-blue-500 mr-2"></i>
+                                  Personal Information
+                                </h4>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Age:</span>
+                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].age}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Birthday:</span>
+                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].birthday}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Gym Time:</span>
+                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].gymTime}</span>
                                   </div>
                                 </div>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                              <i className="fas fa-clipboard-list text-gray-600 text-4xl mb-4"></i>
-                              <h4 className="text-lg font-semibold text-gray-400 mb-2">
-                                No Notes Found
-                              </h4>
-                              <p className="text-gray-500 text-sm">
-                                No notes found for {selectedAthlete} yet.
-                              </p>
+                              </div>
+
+                              {/* Team Info */}
+                              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                  <i className="fas fa-users text-blue-500 mr-2"></i>
+                                  Team Information
+                                </h4>
+                                <div className="space-y-3">
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Crew Chief:</span>
+                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].crewChief || 'TBD'}</span>
+                                  </div>
+                                  <div className="flex justify-between">
+                                    <span className="text-gray-600">Spotter:</span>
+                                    <span className="font-medium text-gray-900">{athleteProfiles[selectedAthlete].spotter || 'TBD'}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Contact Info */}
+                              <div className="bg-gray-50 rounded-xl p-6 border border-gray-200 md:col-span-2">
+                                <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                                  <i className="fas fa-phone text-blue-500 mr-2"></i>
+                                  Contact Information
+                                </h4>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-600">Phone:</span>
+                                    <a 
+                                      href={`tel:${athleteProfiles[selectedAthlete].phone}`}
+                                      className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
+                                    >
+                                      {athleteProfiles[selectedAthlete].phone}
+                                    </a>
+                                  </div>
+                                  <div className="flex items-center justify-between">
+                                    <span className="text-gray-600">Email:</span>
+                                    <a 
+                                      href={`mailto:${athleteProfiles[selectedAthlete].email}`}
+                                      className="font-medium text-blue-500 hover:text-blue-600 transition-colors"
+                                    >
+                                      {athleteProfiles[selectedAthlete].email}
+                                    </a>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
                           )}
+
+                          {/* Recent Notes */}
+                          <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+                              <i className="fas fa-clipboard-list text-blue-500 mr-2"></i>
+                              Recent Notes ({athleteNotes.length})
+                            </h4>
+                            {loadingAthleteData ? (
+                              <div className="flex items-center justify-center py-8">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                                  <span className="text-gray-600">Loading notes...</span>
+                                </div>
+                              </div>
+                            ) : athleteNotes.length > 0 ? (
+                              <div className="space-y-3 max-h-64 overflow-y-auto">
+                                {athleteNotes.map((note, index) => (
+                                  <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
+                                    <div className="flex items-center justify-between mb-2">
+                                      <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
+                                      <span className="text-xs text-gray-500">{formatTimestamp(note.Timestamp)}</span>
+                                    </div>
+                                    <p className="text-gray-700 text-sm">{note.Note}</p>
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-gray-500 text-center py-8">No notes available for this athlete.</p>
+                            )}
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <i className="fas fa-users text-gray-600 text-5xl mb-6"></i>
-                        <h3 className="text-xl font-semibold text-gray-400 mb-3">
-                          Select an Athlete
-                        </h3>
-                        <p className="text-gray-500 text-sm max-w-md">
-                          Choose an athlete from the dropdown above to view their comprehensive dashboard with calendar, stats, and recent notes.
-                        </p>
+                      /* Athletes Grid */
+                      <div className="h-full overflow-y-auto p-6">
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                          {drivers.map((driver) => (
+                            <button
+                              key={driver}
+                              onClick={() => { 
+                                setSelectedAthlete(driver); 
+                                fetchAthleteData(driver);
+                                hapticFeedback(); 
+                              }}
+                              className="bg-white hover:bg-gray-50 border border-gray-200 hover:border-blue-500 rounded-2xl p-4 transition-all duration-200 text-left group shadow-sm"
+                            >
+                              <div className="flex flex-col items-center space-y-3">
+                                <DriverLogo driverName={driver} size="md" />
+                                <div className="text-center">
+                                  <h3 className="font-semibold text-gray-900 group-hover:text-blue-500 transition-colors text-sm">
+                                    {driver}
+                                  </h3>
+                                  {athleteProfiles[driver] && (
+                                    <p className="text-xs text-gray-500 mt-1">
+                                      Age {athleteProfiles[driver].age}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -1696,19 +1671,19 @@ const Index = () => {
             {/* Reminder Modal */}
             {showReminderModal && reminderNote && (
               <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-                <div className="bg-gray-900 w-full max-w-md rounded-2xl border border-gray-700">
+                <div className="bg-white w-full max-w-md rounded-2xl shadow-xl border border-gray-200">
                   {/* Modal Header */}
-                  <div className="flex items-center justify-between p-6 border-b border-gray-700">
+                  <div className="flex items-center justify-between p-6 border-b border-gray-200">
                     <div className="flex items-center space-x-3">
-                      <i className="fas fa-bell text-yellow-500 text-xl"></i>
+                      <i className="fas fa-bell text-blue-500 text-xl"></i>
                       <div>
-                        <h2 className="text-xl font-bold">Set Follow-up Reminder</h2>
-                        <p className="text-gray-400 text-sm">{reminderNote.Driver}</p>
+                        <h2 className="text-xl font-bold text-gray-900">Set Follow-up Reminder</h2>
+                        <p className="text-gray-600 text-sm">{reminderNote.Driver}</p>
                       </div>
                     </div>
                     <button 
                       onClick={() => { setShowReminderModal(false); hapticFeedback(); }}
-                      className="p-2 text-gray-400 hover:text-white"
+                      className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
                     >
                       <i className="fas fa-times text-xl"></i>
                     </button>
@@ -1717,18 +1692,18 @@ const Index = () => {
                   {/* Modal Content */}
                   <div className="p-6 space-y-4">
                     {/* Original Note */}
-                    <div className="bg-black rounded-xl p-4 border border-gray-700">
-                      <p className="text-gray-400 text-sm mb-2">Original Note:</p>
-                      <p className="text-white text-sm">{reminderNote.Note}</p>
+                    <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                      <p className="text-gray-600 text-sm mb-2">Original Note:</p>
+                      <p className="text-gray-900 text-sm">{reminderNote.Note}</p>
                     </div>
 
                     {/* Reminder Message */}
                     <div>
-                      <label className="block text-gray-400 text-sm mb-2">Reminder Message</label>
+                      <label className="block text-gray-700 text-sm font-medium mb-2">Reminder Message</label>
                       <textarea
                         value={reminderMessage}
                         onChange={(e) => setReminderMessage(e.target.value)}
-                        className="w-full h-20 p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none resize-none"
+                        className="w-full h-20 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                         placeholder="What do you want to be reminded about?"
                       />
                     </div>
@@ -1736,45 +1711,46 @@ const Index = () => {
                     {/* Date and Time */}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-gray-400 text-sm mb-2">Date</label>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">Date</label>
                         <input
                           type="date"
                           value={reminderDate}
                           onChange={(e) => setReminderDate(e.target.value)}
-                          className="w-full p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                       <div>
-                        <label className="block text-gray-400 text-sm mb-2">Time</label>
+                        <label className="block text-gray-700 text-sm font-medium mb-2">Time</label>
                         <input
                           type="time"
                           value={reminderTime}
                           onChange={(e) => setReminderTime(e.target.value)}
-                          className="w-full p-3 bg-black text-white rounded-xl border border-gray-700 focus:border-[#7cff00] focus:outline-none"
+                          className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         />
                       </div>
                     </div>
 
                     {/* Quick Time Options */}
                     <div>
-                      <p className="text-gray-400 text-sm mb-2">Quick Options</p>
+                      <p className="text-gray-700 text-sm font-medium mb-2">Quick Options</p>
                       <div className="flex flex-wrap gap-2">
                         {[
-                          { label: 'Tomorrow 9 AM', hours: 24, time: '09:00' },
-                          { label: 'In 2 hours', hours: 2, time: null },
-                          { label: 'Next week', hours: 168, time: '09:00' },
-                          { label: 'In 3 days', hours: 72, time: '09:00' }
+                          { label: 'Tomorrow 7 AM', days: 1, time: '07:00' },
+                          { label: 'In 2 days', days: 2, time: '07:00' },
+                          { label: 'In 3 days', days: 3, time: '07:00' },
+                          { label: 'Next week', days: 7, time: '07:00' }
                         ].map((option) => (
                           <button
                             key={option.label}
                             onClick={() => {
                               const targetDate = new Date();
-                              targetDate.setHours(targetDate.getHours() + option.hours);
+                              targetDate.setDate(targetDate.getDate() + option.days);
+                              targetDate.setHours(7, 0, 0, 0);
                               setReminderDate(targetDate.toISOString().split('T')[0]);
-                              setReminderTime(option.time || targetDate.toTimeString().slice(0, 5));
+                              setReminderTime(option.time);
                               hapticFeedback();
                             }}
-                            className="px-3 py-1 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
+                            className="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm rounded-lg transition-colors"
                           >
                             {option.label}
                           </button>
@@ -1784,16 +1760,16 @@ const Index = () => {
                   </div>
 
                   {/* Modal Footer */}
-                  <div className="flex items-center justify-between p-6 border-t border-gray-700">
+                  <div className="flex items-center justify-between p-6 border-t border-gray-200">
                     <button
                       onClick={() => { setShowReminderModal(false); hapticFeedback(); }}
-                      className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+                      className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
                     >
                       Cancel
                     </button>
                     <button
                       onClick={handleCreateReminder}
-                      className="px-6 py-2 bg-[#7cff00] hover:bg-[#6be600] text-black font-semibold rounded-lg transition-colors"
+                      className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-xl transition-colors"
                     >
                       Set Reminder
                     </button>
@@ -1801,7 +1777,7 @@ const Index = () => {
                 </div>
               </div>
             )}
-          </>
+          </div>
         )}
       </div>
 
@@ -1850,7 +1826,7 @@ const Index = () => {
         button:focus,
         select:focus,
         textarea:focus {
-          outline: 2px solid #7cff00;
+          outline: 2px solid #3b82f6;
           outline-offset: 2px;
         }
 
