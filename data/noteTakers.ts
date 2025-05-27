@@ -1,0 +1,1 @@
+export const noteTakers = ['Scott Speed', 'Josh Wise', 'Dan Jansen', 'Dan Stratton']; 
