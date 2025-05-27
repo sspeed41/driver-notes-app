@@ -1077,7 +1077,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes</title>
+        <title>Wise Driver Notes V1</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
       </Head>
@@ -1095,7 +1095,7 @@ const Index = () => {
                   className="w-40 h-auto max-h-16"
                 />
               </div>
-              <h1 className="text-3xl font-bold mb-4 text-gray-900">Driver Notes</h1>
+              <h1 className="text-3xl font-bold mb-4 text-gray-900">Driver Notes V1</h1>
               <p className="text-gray-600 text-lg">Who are you?</p>
             </div>
 
@@ -1146,7 +1146,7 @@ const Index = () => {
                       className="w-10 h-10 object-contain"
                     />
                     <div>
-                      <h1 className="text-xl font-semibold text-gray-900">Driver Notes</h1>
+                      <h1 className="text-xl font-semibold text-gray-900">Driver Notes V1</h1>
                       <p className="text-sm text-gray-500">
                         {selectedNoteTaker} • Live
                       </p>
