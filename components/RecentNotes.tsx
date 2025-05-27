@@ -135,17 +135,19 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       
                       return (
                         <div key={i} className="mt-3 pl-4 border-l-2 border-gray-200 bg-gray-50 rounded-r-lg p-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center space-x-2 mb-1">
-                                <i className="fas fa-comment text-gray-400 text-xs"></i>
-                                <span className="text-sm text-gray-700">
-                                  {commentText}
-                                </span>
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start space-x-2">
+                                <i className="fas fa-comment text-gray-400 text-xs mt-1 flex-shrink-0"></i>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
+                                    {commentText}
+                                  </p>
+                                </div>
                               </div>
                             </div>
                             {commentTimestamp && (
-                              <span className="text-xs text-gray-500 ml-2 flex-shrink-0">
+                              <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
                                 {commentTimestamp.includes('T') ? formatTimestamp(commentTimestamp) : 
                                  commentTimestamp.includes('/') ? formatTimestamp(new Date(commentTimestamp).toISOString()) : 
                                  commentTimestamp}
