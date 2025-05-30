@@ -292,9 +292,14 @@ const Index = () => {
   };
 
   const hasActiveReminder = (noteIndex: number) => {
-    // This is a simplified version - in a real app, you'd match by note ID
+    const note = recentNotes[noteIndex];
+    if (!note) return false;
+    
     return activeReminders.some(reminder => 
-      !reminder.isCompleted && !reminder.isDismissed
+      !reminder.isCompleted && 
+      !reminder.isDismissed && 
+      reminder.driver === note.Driver &&
+      reminder.originalNote === note.Note
     );
   };
 
