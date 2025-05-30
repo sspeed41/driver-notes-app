@@ -3,6 +3,7 @@ export interface DriverNote {
   'Note Taker': string;
   Note: string;
   Timestamp: string;
+  Type?: 'Note' | 'Focus';
   Tags?: string;
   originalNote?: string;
   reminderMessage?: string;

@@ -73,7 +73,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // Fetch data from Google Sheets
       const response = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Sheet1!A:E', // Adjust this if you want a different sheet or range
+        range: 'Sheet1!A:F', // Updated to include Type column
       });
 
       const rows = response.data.values || [];
@@ -107,14 +107,24 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         note.driver,
         note.noteTaker,
         note.note,
-        new Date(note.timestamp).toLocaleString(),
+        new Date(note.timestamp).toLocaleString('en-US', {
+          timeZone: 'America/New_York',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+        }),
+        note.type || 'Note', // Default to 'Note' if not specified
         note.tags ? note.tags.join(', ') : ''
       ]);
       
       // Append data to the spreadsheet
       const response = await sheets.spreadsheets.values.append({
         spreadsheetId,
-        range: 'Sheet1!A:E', // Adjust this if you want a different sheet or range
+        range: 'Sheet1!A:F', // Updated to include Type column
         valueInputOption: 'USER_ENTERED',
         requestBody: {
           values,
@@ -137,7 +147,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       // First, get all data to find the row to update
       const getResponse = await sheets.spreadsheets.values.get({
         spreadsheetId,
-        range: 'Sheet1!A:E',
+        range: 'Sheet1!A:F', // Updated to include Type column
       });
 
       const rows = getResponse.data.values || [];

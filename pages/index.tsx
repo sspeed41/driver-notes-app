@@ -5,8 +5,10 @@ import Header from '../components/Header';
 import BottomNavigation from '../components/BottomNavigation';
 import Reminders from '../components/Reminders';
 import NoteInputSection from '../components/NoteInputSection';
+import NoteTypeSelector from '../components/NoteTypeSelector';
 import RecentNotes from '../components/RecentNotes';
 import AthleteDashboard from '../components/AthleteDashboard';
+import DiagnosticPanel from '../components/DiagnosticPanel';
 import { ReminderModal, ReminderDetailModal } from '../components/ReminderModal';
 import { DriverNote, Reminder } from '../types/interfaces';
 import { drivers } from '../data/drivers';
@@ -48,6 +50,9 @@ const Index = () => {
   // Tag state
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTagDropdown, setShowTagDropdown] = useState(false);
+  
+  // Note type state
+  const [selectedNoteType, setSelectedNoteType] = useState<'Note' | 'Focus'>('Note');
   
   // Last refresh time
   const [lastRefreshTime, setLastRefreshTime] = useState<Date | null>(null);
@@ -307,6 +312,8 @@ const Index = () => {
 
   const fetchRecentNotes = async () => {
     setLoadingRecentNotes(true);
+    console.log('🔄 Fetching recent notes...');
+    
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
       const response = await fetch(`/api/sheets?t=${Date.now()}`, {
@@ -317,20 +324,81 @@ const Index = () => {
           'Expires': '0'
         }
       });
+      
+      console.log('📡 API Response status:', response.status);
+      
       if (response.ok) {
         const data = await response.json();
-        const sortedNotes = data.sort((a: DriverNote, b: DriverNote) => 
-          new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-        );
-        setRecentNotes(sortedNotes.slice(0, 10));
+        console.log('📊 Raw data received:', data.length, 'notes');
+        console.log('📊 First note sample:', data[0]);
+        
+        // Validate and clean the data
+        const validNotes = data.filter((note: any) => {
+          const isValid = note && 
+                         note.Driver && 
+                         note.Note && 
+                         note.Timestamp && 
+                         note.Timestamp !== 'Invalid Date';
+          
+          if (!isValid) {
+            console.warn('⚠️ Invalid note filtered out:', note);
+          }
+          
+          return isValid;
+        });
+        
+        console.log('✅ Valid notes after filtering:', validNotes.length);
+        
+        // Sort by timestamp with better error handling
+        const sortedNotes = validNotes.sort((a: DriverNote, b: DriverNote) => {
+          try {
+            const dateA = new Date(a.Timestamp);
+            const dateB = new Date(b.Timestamp);
+            
+            // Check if dates are valid
+            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
+              console.warn('⚠️ Invalid timestamp found:', a.Timestamp, b.Timestamp);
+              return 0; // Keep original order for invalid dates
+            }
+            
+            return dateB.getTime() - dateA.getTime();
+          } catch (error) {
+            console.error('❌ Error sorting notes:', error);
+            return 0;
+          }
+        });
+        
+        const recentNotesSlice = sortedNotes.slice(0, 10);
+        console.log('📝 Setting recent notes:', recentNotesSlice.length, 'notes');
+        
+        setRecentNotes(recentNotesSlice);
         setLastRefreshTime(new Date());
+        
+        // Log success
+        console.log('✅ Recent notes updated successfully');
+        
       } else {
-        console.error('Failed to fetch recent notes');
+        console.error('❌ Failed to fetch recent notes - Status:', response.status);
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        
+        // Set error status for user feedback
+        setSaveStatus({
+          success: false,
+          message: `Failed to load recent notes (${response.status}). Please try refreshing.`
+        });
       }
     } catch (error) {
-      console.error('Error fetching recent notes:', error);
+      console.error('❌ Error fetching recent notes:', error);
+      
+      // Set error status for user feedback
+      setSaveStatus({
+        success: false,
+        message: 'Network error loading recent notes. Please check your connection and try again.'
+      });
     } finally {
       setLoadingRecentNotes(false);
+      console.log('🏁 Fetch recent notes completed');
     }
   };
 
@@ -482,6 +550,7 @@ const Index = () => {
               noteTaker: selectedNoteTaker,
               note: finalNoteText,
               timestamp: new Date().toISOString(),
+              type: selectedNoteType,
               tags: noteTags
             }]
           })
@@ -490,10 +559,11 @@ const Index = () => {
         if (response.ok) {
           setSaveStatus({
             success: true,
-            message: 'Note saved successfully!'
+            message: `${selectedNoteType} saved successfully!`
           });
           setNoteText('');
           setSelectedTags([]);
+          setSelectedNoteType('Note'); // Reset to default
           // Add delay to ensure Google Sheets has updated
           setTimeout(() => {
             fetchRecentNotes();
@@ -572,7 +642,48 @@ const Index = () => {
       <Head>
         <title>Wise Driver Notes V2</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        
+        {/* PWA Meta Tags */}
+        <meta name="application-name" content="Driver Notes" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="Driver Notes" />
+        <meta name="description" content="Professional racing driver notes and feedback system" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="mobile-web-app-capable" content="yes" />
+        <meta name="theme-color" content="#3b82f6" />
+        
+        {/* Apple Touch Icons */}
+        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/images/apple-touch-icon.png" />
+        
+        {/* Manifest */}
+        <link rel="manifest" href="/manifest.json" />
+        
+        {/* Favicon */}
+        <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-192.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/images/icon-192.png" />
+        
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+        
+        {/* Service Worker Registration */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/sw.js')
+                  .then(function(registration) {
+                    console.log('SW registered: ', registration);
+                  })
+                  .catch(function(registrationError) {
+                    console.log('SW registration failed: ', registrationError);
+                  });
+              });
+            }
+          `
+        }} />
       </Head>
 
       <div className="bg-black text-white min-h-screen">
@@ -623,6 +734,13 @@ const Index = () => {
                 </select>
               </div>
 
+              {/* Note Type Selection */}
+              <NoteTypeSelector
+                selectedType={selectedNoteType}
+                onTypeChange={setSelectedNoteType}
+                hapticFeedback={hapticFeedback}
+              />
+
               {/* Note Input Section */}
               <NoteInputSection
                 selectedDriver={selectedDriver}
@@ -638,6 +756,14 @@ const Index = () => {
                 onToggleTagDropdown={toggleTagDropdown}
                 onTagSelect={handleTagSelect}
                 hapticFeedback={hapticFeedback}
+              />
+
+              {/* Diagnostic Panel - Development Only */}
+              <DiagnosticPanel
+                recentNotes={recentNotes}
+                loadingRecentNotes={loadingRecentNotes}
+                lastRefreshTime={lastRefreshTime}
+                onRefresh={fetchRecentNotes}
               />
 
               {/* Recent Notes Feed */}

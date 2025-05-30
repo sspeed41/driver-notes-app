@@ -149,6 +149,57 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                 </div>
               </div>
 
+              {/* Focus Items */}
+              {(() => {
+                const focusItems = athleteNotes.filter(note => note.Type === 'Focus');
+                return focusItems.length > 0 ? (
+                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-2xl p-6 mb-6">
+                    <div className="flex items-center space-x-3 mb-4">
+                      <div className="p-2 bg-orange-500 rounded-lg">
+                        <i className="fas fa-bullseye text-white text-lg"></i>
+                      </div>
+                      <div>
+                        <h4 className="text-xl font-bold text-orange-900">Current Focus Areas</h4>
+                        <p className="text-orange-700 text-sm">Priority items for {selectedAthlete}</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      {focusItems.map((focusItem, index) => (
+                        <div key={index} className="bg-white border border-orange-200 rounded-xl p-4 shadow-sm">
+                          <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                              <span className="text-sm font-medium text-orange-800">
+                                Focus Item #{index + 1}
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-2 text-xs text-orange-600">
+                              <span>{focusItem['Note Taker']}</span>
+                              <span>•</span>
+                              <span>{formatTimestamp(focusItem.Timestamp)}</span>
+                            </div>
+                          </div>
+                          <p className="text-gray-800 leading-relaxed">
+                            {focusItem.Note.split('#').map((textPart, j) => 
+                              j === 0 ? textPart : <span key={j}><span className="text-orange-600 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                            )}
+                          </p>
+                          {focusItem.Tags && (
+                            <div className="flex flex-wrap gap-2 mt-3">
+                              {focusItem.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                <span key={tagIndex} className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
+                                  #{tag.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : null;
+              })()}
+
               {/* Quick Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
@@ -308,7 +359,7 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
               <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <i className="fas fa-clipboard-list text-blue-500 mr-2"></i>
-                  Recent Notes ({athleteNotes.length})
+                  Recent Notes ({athleteNotes.filter(note => note.Type !== 'Focus').length})
                 </h4>
                 {loadingAthleteData ? (
                   <div className="flex items-center justify-center py-8">
@@ -317,21 +368,44 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                       <span className="text-gray-600">Loading notes...</span>
                     </div>
                   </div>
-                ) : athleteNotes.length > 0 ? (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {athleteNotes.map((note, index) => (
-                      <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
-                          <span className="text-xs text-gray-500">{formatTimestamp(note.Timestamp)}</span>
+                ) : (() => {
+                  const regularNotes = athleteNotes.filter(note => note.Type !== 'Focus');
+                  return regularNotes.length > 0 ? (
+                    <div className="space-y-3 max-h-64 overflow-y-auto">
+                      {regularNotes.map((note, index) => (
+                        <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
+                              {note.Type && note.Type !== 'Note' && (
+                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                  {note.Type}
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-xs text-gray-500">{formatTimestamp(note.Timestamp)}</span>
+                          </div>
+                          <p className="text-gray-700 text-sm leading-relaxed">
+                            {note.Note.split('#').map((textPart, j) => 
+                              j === 0 ? textPart : <span key={j}><span className="text-blue-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                            )}
+                          </p>
+                          {note.Tags && (
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                                  #{tag.trim()}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
-                        <p className="text-gray-700 text-sm">{note.Note}</p>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-gray-500 text-center py-8">No notes available for this athlete.</p>
-                )}
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-center py-8">No regular notes available for this athlete.</p>
+                  );
+                })()}
               </div>
             </div>
           </div>
