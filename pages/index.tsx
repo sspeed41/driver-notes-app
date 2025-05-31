@@ -842,12 +842,11 @@ const Index = () => {
                 athleteNotes={athleteNotes}
                 loadingAthleteData={loadingAthleteData}
                 onSelectAthlete={(athlete) => {
+                  setSelectedAthlete(athlete);
                   if (athlete) {
-                    setSelectedAthlete(athlete);
                     fetchAthleteData(athlete);
-                  } else {
-                    setSelectedAthlete('');
                   }
+                  hapticFeedback();
                 }}
                 onClose={() => setShowAthleteDashboard(false)}
                 onFetchAthleteData={fetchAthleteData}

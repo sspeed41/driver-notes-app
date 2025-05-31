@@ -84,7 +84,10 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
           }
 
           return (
-            <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 transition-colors">
+            <div key={`${note.Driver}-${note.Timestamp}-${index}`} 
+              className={`rounded-2xl shadow-sm border border-gray-200 p-6 transition-colors ${
+                note.Type === 'Focus' ? 'bg-red-50' : 'bg-white'
+              }`}>
               <div className="flex items-start space-x-4">
                 <DriverLogo driverName={note.Driver} size="md" />
                 <div className="flex-1 min-w-0">
@@ -96,15 +99,6 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                     <span className="text-gray-500 text-sm">
                       {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
                     </span>
-                    {note.Type === 'Focus' && (
-                      <>
-                        <span className="text-gray-400">•</span>
-                        <span className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium flex items-center space-x-1">
-                          <i className="fas fa-bullseye text-xs"></i>
-                          <span>Focus</span>
-                        </span>
-                      </>
-                    )}
                   </div>
                   <p className="text-gray-700 mb-4 leading-relaxed">
                     {note.Note.split('\n\n💬').map((part, i) => {
