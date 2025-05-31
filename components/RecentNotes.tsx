@@ -86,7 +86,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
           return (
             <div key={`${note.Driver}-${note.Timestamp}-${index}`} 
               className={`rounded-2xl shadow-sm border border-gray-200 p-6 transition-colors ${
-                note.Type === 'Focus' ? 'bg-red-50' : 'bg-white'
+                note.Type === 'Focus' ? 'bg-red-50 border-red-200' : 'bg-white'
               }`}>
               <div className="flex items-start space-x-4">
                 <DriverLogo driverName={note.Driver} size="md" />
@@ -100,70 +100,10 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
                     </span>
                   </div>
-                  <p className="text-gray-700 mb-4 leading-relaxed">
-                    {note.Note.split('\n\n💬').map((part, i) => {
-                      if (i === 0) {
-                        // Original note content
-                        return (
-                          <span key={i}>
-                            {part.split('#').map((textPart, j) => 
-                              j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
-                            )}
-                          </span>
-                        );
-                      } else {
-                        // Comment content - parse the comment and timestamp
-                        let commentText = part;
-                        let commentTimestamp = null;
-                        
-                        if (part.includes('\n📅 ')) {
-                          // New format with calendar emoji
-                          const commentParts = part.split('\n📅 ');
-                          commentText = commentParts[0];
-                          commentTimestamp = commentParts[1];
-                        } else if (part.includes(' commented (') && part.includes('): ')) {
-                          // Old format with full timestamp in parentheses
-                          const match = part.match(/^(.+) commented \((.+)\): (.+)$/);
-                          if (match) {
-                            const [, author, timestamp, message] = match;
-                            commentText = `${author} commented: ${message}`;
-                            commentTimestamp = timestamp;
-                          }
-                        } else if (part.includes(' commented: ')) {
-                          // Handle format like "Scott Speed 5/26/2025, 4:11:19 PM commented: message"
-                          const match = part.match(/^(.+?) (\d+\/\d+\/\d+, \d+:\d+:\d+ [AP]M) commented: (.+)$/);
-                          if (match) {
-                            const [, author, timestamp, message] = match;
-                            commentText = `${author} commented: ${message}`;
-                            commentTimestamp = timestamp;
-                          }
-                        }
-                        
-                        return (
-                          <div key={i} className="mt-3 pl-4 border-l-2 border-gray-200 bg-gray-50 rounded-r-lg p-3">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start space-x-2">
-                                  <i className="fas fa-comment text-gray-400 text-xs mt-1 flex-shrink-0"></i>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
-                                      {commentText}
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                              {commentTimestamp && (
-                                <span className="text-xs text-gray-500 flex-shrink-0 whitespace-nowrap">
-                                  {commentTimestamp.includes('T') ? formatTimestamp(commentTimestamp) : 
-                                   commentTimestamp.includes('/') ? formatTimestamp(new Date(commentTimestamp).toISOString()) : 
-                                   commentTimestamp}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      }
-                    })}
+                  <p className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900' : 'text-gray-700'}`}>
+                    {note.Note.split('#').map((textPart, j) => 
+                      j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                    )}
                   </p>
                   {note.Tags && (
                     <div className="flex flex-wrap gap-2 mb-4">

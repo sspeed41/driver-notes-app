@@ -150,60 +150,66 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
               {/* Focus Items */}
               {(() => {
                 const focusItems = athleteNotes.filter(note => note.Type === 'Focus');
-                return focusItems.length > 0 ? (
-                  <div className="bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-200 rounded-2xl p-6 mb-6">
+                return (
+                  <div className={`bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 mb-6 ${
+                    focusItems.length === 0 ? 'opacity-50' : ''
+                  }`}>
                     <div className="flex items-center space-x-3 mb-4">
-                      <div className="p-2 bg-orange-500 rounded-lg">
+                      <div className="p-2 bg-red-500 rounded-lg">
                         <i className="fas fa-bullseye text-white text-lg"></i>
                       </div>
                       <div>
-                        <h4 className="text-xl font-bold text-orange-900">Current Focus Areas</h4>
-                        <p className="text-orange-700 text-sm">Priority items for {selectedAthlete}</p>
+                        <h4 className="text-xl font-bold text-red-900">Current Focus Areas</h4>
+                        <p className="text-red-700 text-sm">Priority items for {selectedAthlete}</p>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      {focusItems.map((focusItem, index) => (
-                        <div key={index} className="bg-white border border-orange-200 rounded-xl p-4 shadow-sm">
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                              <span className="text-sm font-medium text-orange-800">
-                                Focus Item #{index + 1}
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-2">
-                              <div className="text-xs text-orange-600">
-                                <span>{focusItem['Note Taker']}</span>
-                                <span>•</span>
-                                <span>{formatTimestamp(focusItem.Timestamp)}</span>
-                              </div>
-                              <button 
-                                className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
-                                onClick={() => onDeleteNote(focusItem)}
-                              >
-                                <i className="fas fa-times text-sm"></i>
-                              </button>
-                            </div>
-                          </div>
-                          <p className="text-gray-800 leading-relaxed">
-                            {focusItem.Note.split('#').map((textPart, j) => 
-                              j === 0 ? textPart : <span key={j}><span className="text-orange-600 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
-                            )}
-                          </p>
-                          {focusItem.Tags && (
-                            <div className="flex flex-wrap gap-2 mt-3">
-                              {focusItem.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                <span key={tagIndex} className="px-2 py-1 bg-orange-100 text-orange-700 rounded-full text-xs font-medium">
-                                  #{tag.trim()}
+                    {focusItems.length > 0 ? (
+                      <div className="space-y-3">
+                        {focusItems.map((focusItem, index) => (
+                          <div key={index} className="bg-white border border-red-200 rounded-xl p-4 shadow-sm">
+                            <div className="flex items-start justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                                <span className="text-sm font-medium text-red-800">
+                                  Focus Item #{index + 1}
                                 </span>
-                              ))}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <div className="text-xs text-red-600">
+                                  <span>{focusItem['Note Taker']}</span>
+                                  <span>•</span>
+                                  <span>{formatTimestamp(focusItem.Timestamp)}</span>
+                                </div>
+                                <button 
+                                  className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
+                                  onClick={() => onDeleteNote(focusItem)}
+                                >
+                                  <i className="fas fa-times text-sm"></i>
+                                </button>
+                              </div>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
+                            <p className="text-red-900 leading-relaxed">
+                              {focusItem.Note.split('#').map((textPart, j) => 
+                                j === 0 ? textPart : <span key={j}><span className="text-red-600 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                              )}
+                            </p>
+                            {focusItem.Tags && (
+                              <div className="flex flex-wrap gap-2 mt-3">
+                                {focusItem.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                  <span key={tagIndex} className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                    #{tag.trim()}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-red-700 text-center py-4">No focus items set for this athlete yet.</p>
+                    )}
                   </div>
-                ) : null;
+                );
               })()}
 
               {/* Quick Stats */}
