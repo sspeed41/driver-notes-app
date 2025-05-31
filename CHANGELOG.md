@@ -1,5 +1,27 @@
 # Driver Notes App Changelog
 
+## V3.2.0 - January 28, 2025
+
+### 🔧 Improvements
+- **Removed race and performance results** from athlete profiles for a cleaner, more focused interface
+- **Simplified athlete dashboard** to focus on essential information
+- **Improved mobile experience** with less cluttered athlete profiles
+
+### 📊 Changes Made
+- Removed "Quick Stats" section showing:
+  - Next Race
+  - Last Race
+  - Average Finish
+  - Points
+- Streamlined athlete profile to focus on:
+  - Focus Areas
+  - Personal Information
+  - Team Information
+  - Contact Information
+  - Recent Notes
+
+---
+
 ## V3.1.0 - January 28, 2025
 
 ### 🔧 Improvements

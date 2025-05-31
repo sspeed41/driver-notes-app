@@ -167,30 +167,18 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                       <div className="space-y-3">
                         {focusItems.map((focusItem, index) => (
                           <div key={index} className="bg-white border border-red-200 rounded-xl p-4 shadow-sm">
-                            <div className="flex items-start justify-between mb-2">
+                            <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
-                                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                                <span className="text-sm font-medium text-red-800">
-                                  Focus Item #{index + 1}
+                                <span className="text-sm font-medium text-gray-900">{focusItem['Note Taker']}</span>
+                                <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
+                                  Focus
                                 </span>
                               </div>
-                              <div className="flex items-center space-x-2">
-                                <div className="text-xs text-red-600">
-                                  <span>{focusItem['Note Taker']}</span>
-                                  <span>•</span>
-                                  <span>{formatTimestamp(focusItem.Timestamp)}</span>
-                                </div>
-                                <button 
-                                  className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
-                                  onClick={() => onDeleteNote(focusItem)}
-                                >
-                                  <i className="fas fa-times text-sm"></i>
-                                </button>
-                              </div>
+                              <span className="text-xs text-gray-500">{formatTimestamp(focusItem.Timestamp)}</span>
                             </div>
-                            <p className="text-red-900 leading-relaxed">
+                            <p className="text-gray-700 text-sm leading-relaxed">
                               {focusItem.Note.split('#').map((textPart, j) => 
-                                j === 0 ? textPart : <span key={j}><span className="text-red-600 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                                j === 0 ? textPart : <span key={j}><span className="text-red-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
                               )}
                             </p>
                             {focusItem.Tags && (
@@ -211,38 +199,6 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                   </div>
                 );
               })()}
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-calendar text-blue-500"></i>
-                    <span className="text-sm font-medium text-gray-600">Next Race</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900">TBD</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-flag-checkered text-blue-500"></i>
-                    <span className="text-sm font-medium text-gray-600">Last Race</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900">TBD</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-trophy text-blue-500"></i>
-                    <span className="text-sm font-medium text-gray-600">Avg Finish</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900">TBD</p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                  <div className="flex items-center space-x-2 mb-2">
-                    <i className="fas fa-star text-blue-500"></i>
-                    <span className="text-sm font-medium text-gray-600">Points</span>
-                  </div>
-                  <p className="text-lg font-bold text-gray-900">TBD</p>
-                </div>
-              </div>
 
               {/* Athlete Details */}
               {athleteProfiles[selectedAthlete] && (
@@ -380,44 +336,46 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                       <span className="text-gray-600">Loading notes...</span>
                     </div>
                   </div>
-                ) : (() => {
-                  const regularNotes = athleteNotes.filter(note => note.Type !== 'Focus');
-                  return regularNotes.length > 0 ? (
-                    <div className="space-y-3 max-h-64 overflow-y-auto">
-                      {regularNotes.map((note, index) => (
-                        <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
-                          <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center space-x-2">
-                              <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
-                              {note.Type && note.Type !== 'Note' && (
-                                <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                                  {note.Type}
-                                </span>
+                ) : (
+                  (() => {
+                    const regularNotes = athleteNotes.filter(note => note.Type !== 'Focus');
+                    return regularNotes.length > 0 ? (
+                      <div className="space-y-3 max-h-64 overflow-y-auto">
+                        {regularNotes.map((note, index) => (
+                          <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center space-x-2">
+                                <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
+                                {note.Type && note.Type !== 'Note' && (
+                                  <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                    {note.Type}
+                                  </span>
+                                )}
+                              </div>
+                              <span className="text-xs text-gray-500">{formatTimestamp(note.Timestamp)}</span>
+                            </div>
+                            <p className="text-gray-700 text-sm leading-relaxed">
+                              {note.Note.split('#').map((textPart, j) => 
+                                j === 0 ? textPart : <span key={j}><span className="text-blue-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
                               )}
-                            </div>
-                            <span className="text-xs text-gray-500">{formatTimestamp(note.Timestamp)}</span>
-                          </div>
-                          <p className="text-gray-700 text-sm leading-relaxed">
-                            {note.Note.split('#').map((textPart, j) => 
-                              j === 0 ? textPart : <span key={j}><span className="text-blue-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                            </p>
+                            {note.Tags && (
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                                  <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
+                                    #{tag.trim()}
+                                  </span>
+                                ))}
+                              </div>
                             )}
-                          </p>
-                          {note.Tags && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                              {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                                <span key={tagIndex} className="px-2 py-1 bg-gray-100 text-gray-600 rounded-full text-xs">
-                                  #{tag.trim()}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-500 text-center py-8">No regular notes available for this athlete.</p>
-                  );
-                })()}
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500 text-center py-8">No regular notes available for this athlete.</p>
+                    );
+                  })()
+                )}
               </div>
             </div>
           </div>
