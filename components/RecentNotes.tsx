@@ -180,7 +180,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       ))}
                     </div>
                   )}
-                  <div className="flex items-center space-x-6 text-gray-500">
+                  <div className="flex items-center justify-center space-x-4 text-gray-500">
                     <button 
                       className="flex items-center space-x-2 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
                       onClick={() => onReplyToNote(note)}
