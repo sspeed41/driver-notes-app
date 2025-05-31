@@ -175,8 +175,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       }
 
       // Append the reply to the existing note
-      const timestamp = new Date().toISOString();
-      const updatedNote = `${originalNote.Note}\n\n💬 ${replyAuthor} commented: ${replyText}\n📅 ${timestamp}`;
+      const now = new Date();
+      const timeString = now.toLocaleTimeString('en-US', { 
+        hour: 'numeric', 
+        minute: '2-digit',
+        hour12: true 
+      });
+      const updatedNote = `${originalNote.Note}\n\n💬 ${replyAuthor} commented: ${replyText} • ${timeString}`;
       
       // Update the specific cell
       const updateResponse = await sheets.spreadsheets.values.update({
