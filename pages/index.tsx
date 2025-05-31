@@ -338,19 +338,24 @@ const Index = () => {
         console.log('📊 First note sample:', data[0]);
         
         // Validate and clean the data
-        const validNotes = data.filter((note: any) => {
-          const isValid = note && 
-                         note.Driver && 
-                         note.Note && 
-                         note.Timestamp && 
-                         note.Timestamp !== 'Invalid Date';
-          
-          if (!isValid) {
-            console.warn('⚠️ Invalid note filtered out:', note);
-          }
-          
-          return isValid;
-        });
+        const validNotes = data
+          .filter((note: any) => {
+            const isValid = note && 
+                           note.Driver && 
+                           note.Note && 
+                           note.Timestamp && 
+                           note.Timestamp !== 'Invalid Date';
+            
+            if (!isValid) {
+              console.warn('⚠️ Invalid note filtered out:', note);
+            }
+            
+            return isValid;
+          })
+          .map((note: DriverNote) => ({
+            ...note,
+            Type: note.Type || 'Note' // Ensure Type is set, default to 'Note' if not present
+          }));
         
         console.log('✅ Valid notes after filtering:', validNotes.length);
         
@@ -521,7 +526,7 @@ const Index = () => {
         const response = await fetch('/api/sheets', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
+          body: JSON.stringify({ 
             originalNote: replyingToNote,
             replyText: commentText,
             replyAuthor: selectedNoteTaker
@@ -613,11 +618,16 @@ const Index = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        const athleteSpecificNotes = data.filter((note: DriverNote) => 
-          note.Driver === athlete
-        ).sort((a: DriverNote, b: DriverNote) => 
-          new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
-        );
+        // Filter and sort notes for this athlete
+        const athleteSpecificNotes = data
+          .filter((note: DriverNote) => note.Driver === athlete)
+          .map((note: DriverNote) => ({
+            ...note,
+            Type: note.Type || 'Note' // Ensure Type is set, default to 'Note' if not present
+          }))
+          .sort((a: DriverNote, b: DriverNote) => 
+            new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
+          );
         setAthleteNotes(athleteSpecificNotes);
       } else {
         console.error('Failed to fetch athlete data');
