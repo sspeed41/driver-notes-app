@@ -150,9 +150,6 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
               {/* Focus Items */}
               {(() => {
                 const focusItems = athleteNotes.filter(note => note.Type === 'Focus');
-                console.log('🎯 AthleteDashboard - All athlete notes:', athleteNotes);
-                console.log('🎯 AthleteDashboard - Focus items filtered:', focusItems);
-                console.log('🎯 AthleteDashboard - Selected athlete:', selectedAthlete);
                 return (
                   <div className={`bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 mb-6 ${
                     focusItems.length === 0 ? 'opacity-50' : ''

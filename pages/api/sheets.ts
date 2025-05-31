@@ -78,83 +78,48 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
       const rows = response.data.values || [];
       
-      console.log('📊 Google Sheets raw response:', {
-        totalRows: rows.length,
-        headers: rows[0],
-        firstDataRow: rows[1],
-        sampleRows: rows.slice(0, 3)
-      });
-      
       if (rows.length === 0) {
         return res.status(200).json([]);
       }
 
       // Convert rows to objects (assuming first row is headers)
       const headers = rows[0];
-      console.log('📋 Headers found:', headers);
-      console.log('📋 Looking for Type column at index:', headers.indexOf('Type'));
-      
-      const data = rows.slice(1).map((row, index) => {
+      const data = rows.slice(1).map(row => {
         const obj: any = {};
-        headers.forEach((header, headerIndex) => {
-          obj[header] = row[headerIndex] || '';
+        headers.forEach((header, index) => {
+          obj[header] = row[index] || '';
         });
-        
-        // Log first few rows for debugging
-        if (index < 3) {
-          console.log(`📝 Row ${index + 1} processed:`, {
-            Driver: obj.Driver,
-            Type: obj.Type,
-            Note: obj.Note?.substring(0, 30) + '...'
-          });
-        }
-        
         return obj;
       });
 
-      console.log('✅ Final data sample:', data.slice(0, 2));
       return res.status(200).json(data);
 
     } else if (req.method === 'POST') {
       // Save data to Google Sheets
       const { notes } = req.body;
       
-      console.log('💾 POST request received:', { notes });
-      
       if (!notes || !Array.isArray(notes) || notes.length === 0) {
         return res.status(400).json({ message: 'No valid notes provided' });
       }
 
       // Format data for Sheets
-      const values = notes.map(note => {
-        const formattedRow = [
-          note.driver,
-          note.noteTaker,
-          note.note,
-          new Date(note.timestamp).toLocaleString('en-US', {
-            timeZone: 'America/New_York',
-            year: 'numeric',
-            month: 'numeric',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric',
-            second: 'numeric',
-            hour12: true
-          }),
-          note.type || 'Note', // Default to 'Note' if not specified
-          note.tags ? note.tags.join(', ') : ''
-        ];
-        
-        console.log('📝 Formatting note for Sheets:', {
-          original: note,
-          formatted: formattedRow,
-          typeValue: note.type
-        });
-        
-        return formattedRow;
-      });
-      
-      console.log('📊 Values to be saved to Sheets:', values);
+      const values = notes.map(note => [
+        note.driver,
+        note.noteTaker,
+        note.note,
+        new Date(note.timestamp).toLocaleString('en-US', {
+          timeZone: 'America/New_York',
+          year: 'numeric',
+          month: 'numeric',
+          day: 'numeric',
+          hour: 'numeric',
+          minute: 'numeric',
+          second: 'numeric',
+          hour12: true
+        }),
+        note.type || 'Note', // Default to 'Note' if not specified
+        note.tags ? note.tags.join(', ') : ''
+      ]);
       
       // Append data to the spreadsheet
       const response = await sheets.spreadsheets.values.append({
