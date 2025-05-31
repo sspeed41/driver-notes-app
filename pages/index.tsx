@@ -641,6 +641,7 @@ const Index = () => {
   const fetchAthleteData = async (athlete: string) => {
     setLoadingAthleteData(true);
     try {
+      console.log('🔍 Fetching athlete data for:', athlete);
       // Add cache-busting timestamp to prevent mobile caching issues
       const response = await fetch(`/api/sheets?t=${Date.now()}`, {
         method: 'GET',
@@ -652,16 +653,29 @@ const Index = () => {
       });
       if (response.ok) {
         const data = await response.json();
+        console.log('📊 Raw data from API:', data);
+        console.log('📊 Total notes received:', data.length);
+        
         // Filter and sort notes for this athlete
         const athleteSpecificNotes = data
           .filter((note: DriverNote) => note.Driver === athlete)
-          .map((note: DriverNote) => ({
-            ...note,
-            Type: note.Type || 'Note' // Ensure Type is set, default to 'Note' if not present
-          }))
+          .map((note: DriverNote) => {
+            console.log('🔍 Processing note:', {
+              driver: note.Driver,
+              type: note.Type,
+              note: note.Note?.substring(0, 50) + '...'
+            });
+            return {
+              ...note,
+              Type: note.Type || 'Note' // Ensure Type is set, default to 'Note' if not present
+            };
+          })
           .sort((a: DriverNote, b: DriverNote) => 
             new Date(b.Timestamp).getTime() - new Date(a.Timestamp).getTime()
           );
+        
+        console.log('🎯 Athlete specific notes:', athleteSpecificNotes);
+        console.log('🎯 Focus items found:', athleteSpecificNotes.filter(note => note.Type === 'Focus'));
         setAthleteNotes(athleteSpecificNotes);
       } else {
         console.error('Failed to fetch athlete data');

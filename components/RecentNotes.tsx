@@ -85,14 +85,21 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
 
           return (
             <div key={`${note.Driver}-${note.Timestamp}-${index}`} 
-              className={`rounded-2xl shadow-sm border border-gray-200 p-6 transition-colors ${
-                note.Type === 'Focus' ? 'bg-red-50 border-red-200' : 'bg-white'
+              className={`rounded-2xl shadow-sm border p-6 transition-colors ${
+                note.Type === 'Focus' 
+                  ? 'bg-red-50 border-red-200' 
+                  : 'bg-white border-gray-200'
               }`}>
               <div className="flex items-start space-x-4">
                 <DriverLogo driverName={note.Driver} size="md" />
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-2 mb-2 flex-wrap">
                     <span className="font-semibold text-gray-900">{note.Driver}</span>
+                    {note.Type === 'Focus' && (
+                      <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
+                        🎯 Focus
+                      </span>
+                    )}
                     <span className="text-gray-400">•</span>
                     <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
                     <span className="text-gray-400">•</span>
@@ -100,7 +107,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
                     </span>
                   </div>
-                  <p className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900' : 'text-gray-700'}`}>
+                  <p className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900 font-medium' : 'text-gray-700'}`}>
                     {note.Note.split('#').map((textPart, j) => 
                       j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
                     )}
@@ -108,7 +115,11 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                   {note.Tags && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                        <span key={tagIndex} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm">
+                        <span key={tagIndex} className={`px-3 py-1 rounded-full text-sm ${
+                          note.Type === 'Focus' 
+                            ? 'bg-red-100 text-red-700' 
+                            : 'bg-blue-100 text-blue-700'
+                        }`}>
                           #{tag.trim()}
                         </span>
                       ))}
