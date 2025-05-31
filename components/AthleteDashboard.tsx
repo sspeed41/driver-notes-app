@@ -80,8 +80,6 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     hapticFeedback();
   };
 
-  if (!selectedAthlete) return null;
-
   return (
     <div className="fixed inset-0 bg-gray-50 z-50">
       {/* Header */}
