@@ -193,6 +193,65 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         updatedCells: updateResponse.data.updatedCells || 0
       });
 
+    } else if (req.method === 'DELETE') {
+      // Delete a note
+      const { note } = req.body;
+      
+      if (!note) {
+        return res.status(400).json({ message: 'No note provided for deletion' });
+      }
+
+      // First, get all data to find the row to delete
+      const getResponse = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: 'Sheet1!A:F',
+      });
+
+      const rows = getResponse.data.values || [];
+      if (rows.length === 0) {
+        return res.status(404).json({ message: 'No data found' });
+      }
+
+      // Find the row that matches the note
+      let rowIndex = -1;
+      
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row[0] === note.Driver && 
+            row[1] === note['Note Taker'] && 
+            row[2] === note.Note &&
+            row[3] === note.Timestamp) {
+          rowIndex = i + 1; // +1 because sheets are 1-indexed
+          break;
+        }
+      }
+
+      if (rowIndex === -1) {
+        return res.status(404).json({ message: 'Note not found' });
+      }
+
+      // Delete the row
+      const deleteResponse = await sheets.spreadsheets.batchUpdate({
+        spreadsheetId,
+        requestBody: {
+          requests: [{
+            deleteDimension: {
+              range: {
+                sheetId: 0, // Assuming Sheet1 is the first sheet
+                dimension: 'ROWS',
+                startIndex: rowIndex - 1, // 0-based index
+                endIndex: rowIndex // exclusive
+              }
+            }
+          }]
+        }
+      });
+
+      return res.status(200).json({ 
+        message: 'Note deleted successfully',
+        deletedRow: rowIndex
+      });
+
     } else {
       return res.status(405).json({ message: 'Method not allowed' });
     }

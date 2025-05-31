@@ -6,24 +6,24 @@ import DriverLogo from './DriverLogo';
 import { formatTimestamp } from '../utils/helpers';
 
 interface AthleteDashboardProps {
-  showAthleteDashboard: boolean;
   selectedAthlete: string;
   athleteNotes: DriverNote[];
   loadingAthleteData: boolean;
   onSelectAthlete: (athlete: string) => void;
   onClose: () => void;
   onFetchAthleteData: (athlete: string) => void;
+  onDeleteNote: (note: DriverNote) => void;
   hapticFeedback: () => void;
 }
 
 const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
-  showAthleteDashboard,
   selectedAthlete,
   athleteNotes,
   loadingAthleteData,
   onSelectAthlete,
   onClose,
   onFetchAthleteData,
+  onDeleteNote,
   hapticFeedback
 }) => {
   const [isEditMode, setIsEditMode] = useState(false);
@@ -80,7 +80,7 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
     hapticFeedback();
   };
 
-  if (!showAthleteDashboard) return null;
+  if (!selectedAthlete) return null;
 
   return (
     <div className="fixed inset-0 bg-gray-50 z-50">
@@ -173,10 +173,18 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                                 Focus Item #{index + 1}
                               </span>
                             </div>
-                            <div className="flex items-center space-x-2 text-xs text-orange-600">
-                              <span>{focusItem['Note Taker']}</span>
-                              <span>•</span>
-                              <span>{formatTimestamp(focusItem.Timestamp)}</span>
+                            <div className="flex items-center space-x-2">
+                              <div className="text-xs text-orange-600">
+                                <span>{focusItem['Note Taker']}</span>
+                                <span>•</span>
+                                <span>{formatTimestamp(focusItem.Timestamp)}</span>
+                              </div>
+                              <button 
+                                className="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-lg hover:bg-red-50"
+                                onClick={() => onDeleteNote(focusItem)}
+                              >
+                                <i className="fas fa-times text-sm"></i>
+                              </button>
                             </div>
                           </div>
                           <p className="text-gray-800 leading-relaxed">

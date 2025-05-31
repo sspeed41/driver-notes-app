@@ -10,7 +10,8 @@ interface RecentNotesProps {
   onRefresh: () => void;
   onReplyToNote: (note: DriverNote) => void;
   onSetReminder: (note: DriverNote) => void;
-  hasActiveReminder: (index: number) => boolean;
+  onDeleteNote: (note: DriverNote) => void;
+  hasActiveReminder: (noteIndex: number) => boolean;
   hapticFeedback: () => void;
 }
 
@@ -21,6 +22,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   onRefresh,
   onReplyToNote,
   onSetReminder,
+  onDeleteNote,
   hasActiveReminder,
   hapticFeedback
 }) => {
@@ -196,6 +198,13 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                     >
                       <i className={`fas fa-bell text-sm ${hasActiveReminder(index) ? 'text-yellow-400' : ''}`}></i>
                       {!hasActiveReminder(index) && <span className="text-sm">Remind</span>}
+                    </button>
+                    <button 
+                      className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
+                      onClick={() => onDeleteNote(note)}
+                    >
+                      <i className="fas fa-times text-sm"></i>
+                      <span className="text-sm">Delete</span>
                     </button>
                   </div>
                 </div>

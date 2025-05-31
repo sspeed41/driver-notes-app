@@ -271,6 +271,40 @@ const Index = () => {
     hapticFeedback();
   };
 
+  const handleDeleteNote = async (note: DriverNote) => {
+    if (!confirm('Are you sure you want to delete this note? This action cannot be undone.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/sheets', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note })
+      });
+
+      if (response.ok) {
+        setSaveStatus({
+          success: true,
+          message: 'Note deleted successfully'
+        });
+        // Refresh the notes list
+        setTimeout(() => {
+          fetchRecentNotes();
+        }, 500);
+      } else {
+        throw new Error('Failed to delete note');
+      }
+    } catch (error) {
+      console.error('Error deleting note:', error);
+      setSaveStatus({
+        success: false,
+        message: 'Failed to delete note. Please try again.'
+      });
+    }
+    hapticFeedback();
+  };
+
   const getDueReminders = () => {
     const now = new Date();
     return activeReminders.filter(reminder => {
@@ -789,6 +823,7 @@ const Index = () => {
                 onRefresh={fetchRecentNotes}
                 onReplyToNote={handleReplyToNote}
                 onSetReminder={handleSetReminder}
+                onDeleteNote={handleDeleteNote}
                 hasActiveReminder={hasActiveReminder}
                 hapticFeedback={hapticFeedback}
               />
@@ -801,16 +836,25 @@ const Index = () => {
             />
 
             {/* Athlete Dashboard */}
-            <AthleteDashboard
-              showAthleteDashboard={showAthleteDashboard}
-              selectedAthlete={selectedAthlete}
-              athleteNotes={athleteNotes}
-              loadingAthleteData={loadingAthleteData}
-              onSelectAthlete={setSelectedAthlete}
-              onClose={() => setShowAthleteDashboard(false)}
-              onFetchAthleteData={fetchAthleteData}
-              hapticFeedback={hapticFeedback}
-            />
+            {showAthleteDashboard && (
+              <AthleteDashboard
+                selectedAthlete={selectedAthlete}
+                athleteNotes={athleteNotes}
+                loadingAthleteData={loadingAthleteData}
+                onSelectAthlete={(athlete) => {
+                  if (athlete) {
+                    setSelectedAthlete(athlete);
+                    fetchAthleteData(athlete);
+                  } else {
+                    setSelectedAthlete('');
+                  }
+                }}
+                onClose={() => setShowAthleteDashboard(false)}
+                onFetchAthleteData={fetchAthleteData}
+                onDeleteNote={handleDeleteNote}
+                hapticFeedback={hapticFeedback}
+              />
+            )}
 
             {/* Reminder Modal */}
             <ReminderModal
