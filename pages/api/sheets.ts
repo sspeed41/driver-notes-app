@@ -1,6 +1,69 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { google } from 'googleapis';
 
+// Helper function to format relative time
+const getRelativeTime = (timestamp: string) => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  
+  if (diffInSeconds < 60) {
+    return 'just now';
+  }
+  
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  if (diffInMinutes < 60) {
+    return `${diffInMinutes}m ago`;
+  }
+  
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  if (diffInHours < 24) {
+    return `${diffInHours}h ago`;
+  }
+  
+  const diffInDays = Math.floor(diffInHours / 24);
+  if (diffInDays < 7) {
+    return `${diffInDays}d ago`;
+  }
+  
+  const diffInWeeks = Math.floor(diffInDays / 7);
+  if (diffInWeeks < 4) {
+    return `${diffInWeeks}w ago`;
+  }
+  
+  const diffInMonths = Math.floor(diffInDays / 30);
+  if (diffInMonths < 12) {
+    return `${diffInMonths}mo ago`;
+  }
+  
+  const diffInYears = Math.floor(diffInDays / 365);
+  return `${diffInYears}y ago`;
+};
+
+// Helper function to reformat comments
+const reformatComments = (noteText: string) => {
+  // Split the note into lines
+  const lines = noteText.split('\n');
+  
+  // Process each line
+  return lines.map(line => {
+    // Check if this is a comment line (contains 💬 and 📅)
+    if (line.includes('💬') && line.includes('📅')) {
+      // Extract the comment and timestamp
+      const commentMatch = line.match(/💬 (.*?) commented: (.*?) 📅 (.*)/);
+      if (commentMatch) {
+        const [_, author, comment, timestamp] = commentMatch;
+        // Get relative time
+        const relativeTime = getRelativeTime(timestamp);
+        // Return the reformatted comment
+        return `${author} commented: ${comment} • ${relativeTime}`;
+      }
+    }
+    // Return the line unchanged if it's not a comment
+    return line;
+  }).join('\n');
+};
+
 // This will store your credentials once you've added them
 let credentials: any = null;
 try {
@@ -87,7 +150,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       const data = rows.slice(1).map(row => {
         const obj: any = {};
         headers.forEach((header, index) => {
-          obj[header] = row[index] || '';
+          // If this is the Note column, reformat any comments
+          if (header === 'Note' && row[index]) {
+            obj[header] = reformatComments(row[index]);
+          } else {
+            obj[header] = row[index] || '';
+          }
         });
         return obj;
       });
