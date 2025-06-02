@@ -178,7 +178,7 @@ const Index = () => {
   // Note handlers
   const handleReplyToNote = (note: DriverNote) => {
     setSelectedDriver(note.Driver);
-    setNoteText(`💬 Comment: `);
+    setNoteText(`Comment: `);
     setReplyingToNote(note);
     
     // Scroll to the note input area
@@ -552,8 +552,8 @@ const Index = () => {
       let finalNoteText = noteText;
       
       // If this is a reply, append to the original note
-      if (replyingToNote && noteText.startsWith('💬 Comment: ')) {
-        const commentText = noteText.replace('💬 Comment: ', '');
+      if (replyingToNote && noteText.startsWith('Comment: ')) {
+        const commentText = noteText.replace('Comment: ', '');
         const timestamp = new Date().toISOString();
         
         // Update the original note with the comment
