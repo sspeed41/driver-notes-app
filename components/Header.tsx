@@ -7,6 +7,13 @@ interface HeaderProps {
   onClearReminders: () => void;
   onChangeUser: () => void;
   onToggleNotifications: () => void;
+  inAppNotifications?: Array<{
+    id: string;
+    title: string;
+    message: string;
+    timestamp: number;
+  }>;
+  onDismissNotification?: (id: string) => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
@@ -15,10 +22,39 @@ const Header: React.FC<HeaderProps> = ({
   notificationsEnabled, 
   onClearReminders, 
   onChangeUser, 
-  onToggleNotifications 
+  onToggleNotifications,
+  inAppNotifications = [],
+  onDismissNotification
 }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      {/* In-app Notifications */}
+      {inAppNotifications.length > 0 && (
+        <div className="bg-blue-50 border-b border-blue-100">
+          <div className="max-w-4xl mx-auto px-4 py-2">
+            {inAppNotifications.map(notification => (
+              <div 
+                key={notification.id}
+                className="flex items-start justify-between p-3 bg-white rounded-lg shadow-sm mb-2 last:mb-0 border border-blue-100"
+              >
+                <div className="flex-1">
+                  <h3 className="text-sm font-semibold text-blue-900">{notification.title}</h3>
+                  <p className="text-sm text-blue-700">{notification.message}</p>
+                </div>
+                {onDismissNotification && (
+                  <button 
+                    onClick={() => onDismissNotification(notification.id)}
+                    className="ml-2 text-blue-400 hover:text-blue-600"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo and Title */}

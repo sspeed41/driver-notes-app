@@ -34,6 +34,13 @@ const Index = () => {
   // Notification state
   const [lastKnownNoteCount, setLastKnownNoteCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
+  const [inAppNotifications, setInAppNotifications] = useState<Array<{
+    id: string;
+    title: string;
+    message: string;
+    timestamp: number;
+  }>>([]);
   
   // Athlete Dashboard state
   const [showAthleteDashboard, setShowAthleteDashboard] = useState(false);
@@ -143,27 +150,44 @@ const Index = () => {
         const notificationTitle = `New ${note.Type || 'Note'}: ${note.Driver}`;
         const notificationBody = `${note['Note Taker']}: ${note.Note.substring(0, 100)}${note.Note.length > 100 ? '...' : ''}`;
         
-        const notification = new Notification(notificationTitle, {
-          body: notificationBody,
-          icon: '/images/W.O. LOGO - small.png',
-          tag: `note-${note.Driver}-${note.Timestamp}`, // Prevent duplicate notifications
-          requireInteraction: false
-        });
-        
-        // Auto-close notification after 5 seconds
-        setTimeout(() => {
-          notification.close();
-        }, 5000);
-        
-        // Optional: Play notification sound
-        try {
-          const audio = new Audio('/notification-sound.mp3');
-          audio.volume = 0.3;
-          audio.play().catch(() => {
-            // Ignore audio play errors (user hasn't interacted with page yet)
+        if (isIOS) {
+          // For iOS devices, show in-app notification
+          const newNotification = {
+            id: `note-${note.Driver}-${note.Timestamp}`,
+            title: notificationTitle,
+            message: notificationBody,
+            timestamp: Date.now()
+          };
+          setInAppNotifications(prev => [newNotification, ...prev].slice(0, 5));
+          
+          // Play notification sound
+          try {
+            const audio = new Audio('/notification-sound.mp3');
+            audio.volume = 0.3;
+            audio.play().catch(() => {
+              // Ignore audio play errors
+            });
+          } catch (error) {
+            // Ignore audio errors
+          }
+          
+          // Vibrate if supported
+          if (navigator.vibrate) {
+            navigator.vibrate(200);
+          }
+        } else if ('Notification' in window && Notification.permission === 'granted') {
+          // For other browsers, show browser notification
+          const notification = new Notification(notificationTitle, {
+            body: notificationBody,
+            icon: '/images/W.O. LOGO - small.png',
+            tag: `note-${note.Driver}-${note.Timestamp}`,
+            requireInteraction: false
           });
-        } catch (error) {
-          // Ignore audio errors
+          
+          // Auto-close notification after 5 seconds
+          setTimeout(() => {
+            notification.close();
+          }, 5000);
         }
       });
       
@@ -246,67 +270,98 @@ const Index = () => {
   };
 
   const handleToggleNotifications = async () => {
-    if (!('Notification' in window)) {
+    if (isIOS) {
+      // For iOS devices, toggle in-app notifications
+      const newState = !notificationsEnabled;
+      setNotificationsEnabled(newState);
+      setSaveStatus({
+        success: true,
+        message: newState ? 'In-app notifications enabled' : 'In-app notifications disabled'
+      });
+      
+      // Show a test notification
+      if (newState) {
+        const testNotification = {
+          id: `test-${Date.now()}`,
+          title: 'Driver Notes V3.4',
+          message: 'In-app notifications are now enabled! You\'ll be notified when team members create new notes.',
+          timestamp: Date.now()
+        };
+        setInAppNotifications(prev => [testNotification, ...prev].slice(0, 5));
+        
+        // Play notification sound
+        try {
+          const audio = new Audio('/notification-sound.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(() => {
+            // Ignore audio play errors
+          });
+        } catch (error) {
+          // Ignore audio errors
+        }
+        
+        // Vibrate if supported
+        if (navigator.vibrate) {
+          navigator.vibrate(200);
+        }
+      }
+    } else if (!('Notification' in window)) {
       setSaveStatus({
         success: false,
         message: 'Notifications not supported in this browser'
       });
-      hapticFeedback();
-      return;
-    }
-
-    try {
-      if (Notification.permission === 'granted') {
-        // Toggle notifications on/off
-        const newState = !notificationsEnabled;
-        setNotificationsEnabled(newState);
-        setSaveStatus({
-          success: true,
-          message: newState ? 'Notifications enabled' : 'Notifications disabled'
-        });
-      } else if (Notification.permission === 'denied') {
-        // Permission was denied, show instructions
-        setSaveStatus({
-          success: false,
-          message: 'Notifications blocked. Please enable in browser settings and refresh the page.'
-        });
-      } else {
-        // Request permission
-        setSaveStatus({
-          success: true,
-          message: 'Requesting notification permission...'
-        });
-        
-        const permission = await Notification.requestPermission();
-        
-        if (permission === 'granted') {
-          setNotificationsEnabled(true);
+    } else {
+      try {
+        if (Notification.permission === 'granted') {
+          // Toggle notifications on/off
+          const newState = !notificationsEnabled;
+          setNotificationsEnabled(newState);
           setSaveStatus({
             success: true,
-            message: 'Notifications enabled! You\'ll now get notified when team members create notes.'
+            message: newState ? 'Notifications enabled' : 'Notifications disabled'
           });
-          
-          // Show a test notification
-          setTimeout(() => {
-            new Notification('Driver Notes V3.4', {
-              body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
-              icon: '/images/W.O. LOGO - small.png'
-            });
-          }, 500);
-        } else {
-          setNotificationsEnabled(false);
+        } else if (Notification.permission === 'denied') {
           setSaveStatus({
             success: false,
-            message: 'Notification permission denied. You can enable it later in browser settings.'
+            message: 'Notifications blocked. Please enable in browser settings and refresh the page.'
           });
+        } else {
+          setSaveStatus({
+            success: true,
+            message: 'Requesting notification permission...'
+          });
+          
+          const permission = await Notification.requestPermission();
+          
+          if (permission === 'granted') {
+            setNotificationsEnabled(true);
+            setSaveStatus({
+              success: true,
+              message: 'Notifications enabled! You\'ll now get notified when team members create notes.'
+            });
+            
+            // Show a test notification
+            setTimeout(() => {
+              new Notification('Driver Notes V3.4', {
+                body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
+                icon: '/images/W.O. LOGO - small.png'
+              });
+            }, 500);
+          } else {
+            setNotificationsEnabled(false);
+            setSaveStatus({
+              success: false,
+              message: 'Notification permission denied. You can enable it later in browser settings.'
+            });
+          }
         }
+      } catch (error) {
+        console.error('Notification error:', error);
+        setSaveStatus({
+          success: false,
+          message: 'Error setting up notifications. Please try again.'
+        });
       }
-    } catch (error) {
-      console.error('Notification error:', error);
-      setSaveStatus({
-        success: false,
-        message: 'Error setting up notifications. Please try again.'
-      });
     }
     
     hapticFeedback();
@@ -828,6 +883,18 @@ const Index = () => {
     hapticFeedback();
   };
 
+  // Check if device is iOS
+  useEffect(() => {
+    const isIOSDevice = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
+    setIsIOS(isIOSDevice);
+  }, []);
+
+  // Add notification dismissal handler
+  const handleDismissNotification = (id: string) => {
+    setInAppNotifications(prev => prev.filter(n => n.id !== id));
+    hapticFeedback();
+  };
+
   return (
     <>
       <Head>
@@ -891,6 +958,8 @@ const Index = () => {
               onClearReminders={clearAllReminders}
               onChangeUser={handleChangeUser}
               onToggleNotifications={handleToggleNotifications}
+              inAppNotifications={inAppNotifications}
+              onDismissNotification={handleDismissNotification}
             />
 
             {/* Main Content */}
