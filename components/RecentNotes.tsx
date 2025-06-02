@@ -107,11 +107,50 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
                     </span>
                   </div>
-                  <p className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900 font-medium' : 'text-gray-700'}`}>
-                    {note.Note.split('#').map((textPart, j) => 
-                      j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
-                    )}
-                  </p>
+                  {/* Note Content with Comments */}
+                  <div className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900 font-medium' : 'text-gray-700'}`}>
+                    {(() => {
+                      // Split the note into lines to separate original note from comments
+                      const lines = note.Note.split('\n');
+                      const originalNote = lines[0];
+                      const comments = lines.slice(1).filter(line => line.trim() !== '');
+                      
+                      return (
+                        <>
+                          {/* Original Note */}
+                          <div>
+                            {originalNote.split('#').map((textPart, j) => 
+                              j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                            )}
+                          </div>
+                          
+                          {/* Comments */}
+                          {comments.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                              {comments.map((comment, commentIndex) => {
+                                // Check if this line is a comment
+                                if (comment.includes('commented:')) {
+                                  return (
+                                    <div key={commentIndex} className="pl-4 border-l-2 border-gray-200">
+                                      <div className="text-gray-600 text-sm italic">
+                                        {comment}
+                                      </div>
+                                    </div>
+                                  );
+                                }
+                                // If it's not a comment, render as regular text (shouldn't happen but just in case)
+                                return (
+                                  <div key={commentIndex} className="text-gray-700 text-sm">
+                                    {comment}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
                   {note.Tags && (
                     <div className="flex flex-wrap gap-2 mb-4">
                       {note.Tags.split(',').map((tag: string, tagIndex: number) => (
