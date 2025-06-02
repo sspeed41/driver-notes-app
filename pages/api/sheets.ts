@@ -47,10 +47,10 @@ const reformatComments = (noteText: string) => {
   
   // Process each line
   return lines.map(line => {
-    // Check if this is a comment line (contains 💬 and 📅)
-    if (line.includes('💬') && line.includes('📅')) {
+    // Check if this is a comment line (contains commented: and 📅)
+    if (line.includes('commented:') && line.includes('📅')) {
       // Extract the comment and timestamp
-      const commentMatch = line.match(/💬 (.*?) commented: (.*?) 📅 (.*)/);
+      const commentMatch = line.match(/(.*?) commented: (.*?) 📅 (.*)/);
       if (commentMatch) {
         const [_, author, comment, timestamp] = commentMatch;
         // Get relative time
@@ -242,14 +242,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         return res.status(404).json({ message: 'Original note not found' });
       }
 
-      // Append the reply to the existing note
+      // Append the reply to the existing note with relative time
       const now = new Date();
-      const timeString = now.toLocaleTimeString('en-US', { 
-        hour: 'numeric', 
-        minute: '2-digit',
-        hour12: true 
-      });
-      const updatedNote = `${originalNote.Note}\n\n💬 ${replyAuthor} commented: ${replyText} • ${timeString}`;
+      const updatedNote = `${originalNote.Note}\n\n${replyAuthor} commented: ${replyText} • just now`;
       
       // Update the specific cell
       const updateResponse = await sheets.spreadsheets.values.update({
