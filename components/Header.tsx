@@ -45,15 +45,19 @@ const Header: React.FC<HeaderProps> = ({
             
             {/* Notification Toggle */}
             <button 
-              className={`p-2 rounded-lg transition-colors ${
+              className={`p-2 rounded-lg transition-all duration-200 ${
                 notificationsEnabled 
-                  ? 'text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100' 
-                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                  ? 'text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100 shadow-sm' 
+                  : 'text-gray-400 hover:text-blue-500 hover:bg-blue-50 border border-gray-200 hover:border-blue-300'
               }`}
               onClick={onToggleNotifications}
-              title={notificationsEnabled ? 'Notifications enabled' : 'Enable notifications'}
+              title={
+                notificationsEnabled 
+                  ? 'Notifications enabled - Click to disable' 
+                  : 'Click to enable team notifications'
+              }
             >
-              <i className={`fas ${notificationsEnabled ? 'fa-bell' : 'fa-bell-slash'}`}></i>
+              <i className={`fas ${notificationsEnabled ? 'fa-bell' : 'fa-bell-slash'} text-sm`}></i>
             </button>
             
             {/* Clear Reminders Button (for testing) */}

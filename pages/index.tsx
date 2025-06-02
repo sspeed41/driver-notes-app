@@ -245,30 +245,70 @@ const Index = () => {
     hapticFeedback();
   };
 
-  const handleToggleNotifications = () => {
-    if ('Notification' in window) {
-      if (Notification.permission === 'granted') {
-        setNotificationsEnabled(!notificationsEnabled);
-        setSaveStatus({
-          success: true,
-          message: notificationsEnabled ? 'Notifications disabled' : 'Notifications enabled'
-        });
-      } else {
-        Notification.requestPermission().then(permission => {
-          const enabled = permission === 'granted';
-          setNotificationsEnabled(enabled);
-          setSaveStatus({
-            success: enabled,
-            message: enabled ? 'Notifications enabled' : 'Notifications permission denied'
-          });
-        });
-      }
-    } else {
+  const handleToggleNotifications = async () => {
+    if (!('Notification' in window)) {
       setSaveStatus({
         success: false,
         message: 'Notifications not supported in this browser'
       });
+      hapticFeedback();
+      return;
     }
+
+    try {
+      if (Notification.permission === 'granted') {
+        // Toggle notifications on/off
+        const newState = !notificationsEnabled;
+        setNotificationsEnabled(newState);
+        setSaveStatus({
+          success: true,
+          message: newState ? 'Notifications enabled' : 'Notifications disabled'
+        });
+      } else if (Notification.permission === 'denied') {
+        // Permission was denied, show instructions
+        setSaveStatus({
+          success: false,
+          message: 'Notifications blocked. Please enable in browser settings and refresh the page.'
+        });
+      } else {
+        // Request permission
+        setSaveStatus({
+          success: true,
+          message: 'Requesting notification permission...'
+        });
+        
+        const permission = await Notification.requestPermission();
+        
+        if (permission === 'granted') {
+          setNotificationsEnabled(true);
+          setSaveStatus({
+            success: true,
+            message: 'Notifications enabled! You\'ll now get notified when team members create notes.'
+          });
+          
+          // Show a test notification
+          setTimeout(() => {
+            new Notification('Driver Notes V3.4', {
+              body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
+              icon: '/images/W.O. LOGO - small.png'
+            });
+          }, 500);
+        } else {
+          setNotificationsEnabled(false);
+          setSaveStatus({
+            success: false,
+            message: 'Notification permission denied. You can enable it later in browser settings.'
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Notification error:', error);
+      setSaveStatus({
+        success: false,
+        message: 'Error setting up notifications. Please try again.'
+      });
+    }
+    
     hapticFeedback();
   };
 
