@@ -3,15 +3,19 @@ import React from 'react';
 interface HeaderProps {
   selectedNoteTaker: string;
   activeRemindersCount: number;
+  notificationsEnabled: boolean;
   onClearReminders: () => void;
   onChangeUser: () => void;
+  onToggleNotifications: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   selectedNoteTaker, 
   activeRemindersCount, 
+  notificationsEnabled, 
   onClearReminders, 
-  onChangeUser 
+  onChangeUser, 
+  onToggleNotifications 
 }) => {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
@@ -25,7 +29,7 @@ const Header: React.FC<HeaderProps> = ({
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Driver Notes V3.3</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Driver Notes V3.4</h1>
               <p className="text-sm text-gray-500">
                 {selectedNoteTaker} • Live
               </p>
@@ -38,6 +42,20 @@ const Header: React.FC<HeaderProps> = ({
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
               <span className="text-sm text-gray-500">Connected</span>
             </div>
+            
+            {/* Notification Toggle */}
+            <button 
+              className={`p-2 rounded-lg transition-colors ${
+                notificationsEnabled 
+                  ? 'text-blue-500 hover:text-blue-600 bg-blue-50 hover:bg-blue-100' 
+                  : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+              }`}
+              onClick={onToggleNotifications}
+              title={notificationsEnabled ? 'Notifications enabled' : 'Enable notifications'}
+            >
+              <i className={`fas ${notificationsEnabled ? 'fa-bell' : 'fa-bell-slash'}`}></i>
+            </button>
+            
             {/* Clear Reminders Button (for testing) */}
             {activeRemindersCount > 0 && (
               <button 

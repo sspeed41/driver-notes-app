@@ -1,5 +1,28 @@
 # Driver Notes App Changelog
 
+## V3.4.0 - January 28, 2025
+
+### 🔔 New Feature: Real-time Notifications
+- **Team notifications** - Get notified when other team members create notes
+- **Browser notifications** - Native browser notifications with note preview
+- **Smart filtering** - Only shows notifications for notes from other users (not your own)
+- **Notification toggle** - Enable/disable notifications with header button
+- **Auto-dismiss** - Notifications automatically close after 5 seconds
+- **Status messages** - In-app status when new notes arrive
+
+### 🎯 How It Works
+- **Automatic detection** - Checks for new notes every 30 seconds
+- **Permission request** - Asks for notification permission on first use
+- **Visual indicator** - Bell icon in header shows notification status
+- **Example**: When Dan Stratton creates a note about Dawson Sutton, Scott Speed gets notified
+
+### 📱 Notification Format
+- **Title**: "New Note: [Driver Name]" or "New Focus: [Driver Name]"
+- **Body**: "[Note Taker]: [First 100 characters of note]..."
+- **Icon**: W.O. Optimization logo
+
+---
+
 ## V3.3.0 - January 28, 2025
 
 ### 🔧 Improvements

@@ -31,6 +31,10 @@ const Index = () => {
   const [loadingRecentNotes, setLoadingRecentNotes] = useState(false);
   const [replyingToNote, setReplyingToNote] = useState<DriverNote | null>(null);
   
+  // Notification state
+  const [lastKnownNoteCount, setLastKnownNoteCount] = useState(0);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  
   // Athlete Dashboard state
   const [showAthleteDashboard, setShowAthleteDashboard] = useState(false);
   const [selectedAthlete, setSelectedAthlete] = useState('');
@@ -104,10 +108,76 @@ const Index = () => {
 
   // Request notification permission
   useEffect(() => {
-    if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission();
+    if ('Notification' in window) {
+      if (Notification.permission === 'default') {
+        Notification.requestPermission().then(permission => {
+          setNotificationsEnabled(permission === 'granted');
+        });
+      } else {
+        setNotificationsEnabled(Notification.permission === 'granted');
+      }
     }
   }, []);
+
+  // Check for new notes from other users
+  const checkForNewNotes = (newNotes: DriverNote[]) => {
+    if (!notificationsEnabled || !selectedNoteTaker) return;
+    
+    // Skip if this is the first load
+    if (lastKnownNoteCount === 0) {
+      setLastKnownNoteCount(newNotes.length);
+      return;
+    }
+    
+    // Check if there are new notes
+    if (newNotes.length > lastKnownNoteCount) {
+      const newerNotes = newNotes.slice(0, newNotes.length - lastKnownNoteCount);
+      
+      // Filter out notes created by the current user
+      const notesFromOthers = newerNotes.filter(note => 
+        note['Note Taker'] !== selectedNoteTaker
+      );
+      
+      // Show notifications for notes from other users
+      notesFromOthers.forEach(note => {
+        const notificationTitle = `New ${note.Type || 'Note'}: ${note.Driver}`;
+        const notificationBody = `${note['Note Taker']}: ${note.Note.substring(0, 100)}${note.Note.length > 100 ? '...' : ''}`;
+        
+        const notification = new Notification(notificationTitle, {
+          body: notificationBody,
+          icon: '/images/W.O. LOGO - small.png',
+          tag: `note-${note.Driver}-${note.Timestamp}`, // Prevent duplicate notifications
+          requireInteraction: false
+        });
+        
+        // Auto-close notification after 5 seconds
+        setTimeout(() => {
+          notification.close();
+        }, 5000);
+        
+        // Optional: Play notification sound
+        try {
+          const audio = new Audio('/notification-sound.mp3');
+          audio.volume = 0.3;
+          audio.play().catch(() => {
+            // Ignore audio play errors (user hasn't interacted with page yet)
+          });
+        } catch (error) {
+          // Ignore audio errors
+        }
+      });
+      
+      // Update status message
+      if (notesFromOthers.length > 0) {
+        setSaveStatus({
+          success: true,
+          message: `${notesFromOthers.length} new note${notesFromOthers.length > 1 ? 's' : ''} from team members!`
+        });
+      }
+    }
+    
+    setLastKnownNoteCount(newNotes.length);
+  };
 
   // Cleanup speech recognition on unmount
   useEffect(() => {
@@ -172,6 +242,33 @@ const Index = () => {
   const handleChangeUser = () => {
     setShowUserSelection(true);
     localStorage.removeItem('selectedNoteTaker');
+    hapticFeedback();
+  };
+
+  const handleToggleNotifications = () => {
+    if ('Notification' in window) {
+      if (Notification.permission === 'granted') {
+        setNotificationsEnabled(!notificationsEnabled);
+        setSaveStatus({
+          success: true,
+          message: notificationsEnabled ? 'Notifications disabled' : 'Notifications enabled'
+        });
+      } else {
+        Notification.requestPermission().then(permission => {
+          const enabled = permission === 'granted';
+          setNotificationsEnabled(enabled);
+          setSaveStatus({
+            success: enabled,
+            message: enabled ? 'Notifications enabled' : 'Notifications permission denied'
+          });
+        });
+      }
+    } else {
+      setSaveStatus({
+        success: false,
+        message: 'Notifications not supported in this browser'
+      });
+    }
     hapticFeedback();
   };
 
@@ -414,6 +511,9 @@ const Index = () => {
         
         const recentNotesSlice = sortedNotes.slice(0, 10);
         console.log('📝 Setting recent notes:', recentNotesSlice.length, 'notes');
+        
+        // Check for new notes before updating state
+        checkForNewNotes(sortedNotes);
         
         setRecentNotes(recentNotesSlice);
         setLastRefreshTime(new Date());
@@ -691,7 +791,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.3</title>
+        <title>Wise Driver Notes V3.4</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
@@ -747,8 +847,10 @@ const Index = () => {
             <Header 
               selectedNoteTaker={selectedNoteTaker}
               activeRemindersCount={activeReminders.length}
+              notificationsEnabled={notificationsEnabled}
               onClearReminders={clearAllReminders}
               onChangeUser={handleChangeUser}
+              onToggleNotifications={handleToggleNotifications}
             />
 
             {/* Main Content */}
