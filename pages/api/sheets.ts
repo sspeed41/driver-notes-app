@@ -47,18 +47,59 @@ const reformatComments = (noteText: string) => {
   
   // Process each line
   return lines.map(line => {
-    // Check if this is a comment line (contains commented: and 📅)
-    if (line.includes('commented:') && line.includes('📅')) {
-      // Extract the comment and timestamp
-      const commentMatch = line.match(/(.*?) commented: (.*?) 📅 (.*)/);
+    // Check for various comment formats:
+    // 1. "💬 Author commented: Comment 📅 timestamp"
+    // 2. "💬 Author commented: Comment • timestamp"
+    // 3. "Author commented: Comment 📅 timestamp"
+    // 4. "Author commented: Comment • timestamp"
+    
+    if (line.includes('commented:')) {
+      // Try different regex patterns
+      let commentMatch = null;
+      
+      // Pattern 1: 💬 Author commented: Comment 📅 timestamp
+      commentMatch = line.match(/💬 (.*?) commented: (.*?) 📅 (.*)/);
       if (commentMatch) {
         const [_, author, comment, timestamp] = commentMatch;
-        // Get relative time
         const relativeTime = getRelativeTime(timestamp);
-        // Return the reformatted comment
         return `${author} commented: ${comment} • ${relativeTime}`;
       }
+      
+      // Pattern 2: 💬 Author commented: Comment • timestamp
+      commentMatch = line.match(/💬 (.*?) commented: (.*?) • (.*)/);
+      if (commentMatch) {
+        const [_, author, comment, timestamp] = commentMatch;
+        // If timestamp is already relative (contains "ago"), keep it
+        if (timestamp.includes('ago') || timestamp === 'just now') {
+          return `${author} commented: ${comment} • ${timestamp}`;
+        } else {
+          const relativeTime = getRelativeTime(timestamp);
+          return `${author} commented: ${comment} • ${relativeTime}`;
+        }
+      }
+      
+      // Pattern 3: Author commented: Comment 📅 timestamp
+      commentMatch = line.match(/(.*?) commented: (.*?) 📅 (.*)/);
+      if (commentMatch) {
+        const [_, author, comment, timestamp] = commentMatch;
+        const relativeTime = getRelativeTime(timestamp);
+        return `${author} commented: ${comment} • ${relativeTime}`;
+      }
+      
+      // Pattern 4: Author commented: Comment • timestamp (already in correct format, but check timestamp)
+      commentMatch = line.match(/(.*?) commented: (.*?) • (.*)/);
+      if (commentMatch) {
+        const [_, author, comment, timestamp] = commentMatch;
+        // If timestamp is already relative (contains "ago"), keep it
+        if (timestamp.includes('ago') || timestamp === 'just now') {
+          return line; // Already in correct format
+        } else {
+          const relativeTime = getRelativeTime(timestamp);
+          return `${author} commented: ${comment} • ${relativeTime}`;
+        }
+      }
     }
+    
     // Return the line unchanged if it's not a comment
     return line;
   }).join('\n');

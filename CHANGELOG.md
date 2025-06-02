@@ -1,5 +1,24 @@
 # Driver Notes App Changelog
 
+## V3.3.0 - January 28, 2025
+
+### 🔧 Improvements
+- **Fixed comment formatting comprehensively** - All comment formats now display consistently
+- **Removed emojis from comments** - Clean text-only format for better readability
+- **Standardized relative time** - All timestamps show as "2h ago", "1d ago", etc.
+- **Enhanced comment parsing** - Handles all existing comment formats in Google Sheets
+
+### 📝 Comment Format Changes
+- **Before**: `💬 Scott Speed commented: Great job! 📅 2025-01-28T19:30:45.123Z`
+- **After**: `Scott Speed commented: Great job! • 2h ago`
+
+### 🔍 Technical Details
+- Added comprehensive regex patterns to handle all comment variations
+- Improved relative time calculation for better accuracy
+- Enhanced comment parsing to handle legacy formats
+
+---
+
 ## V3.2.0 - January 28, 2025
 
 ### 🔧 Improvements
