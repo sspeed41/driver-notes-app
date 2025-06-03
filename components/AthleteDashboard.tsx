@@ -196,9 +196,9 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                               </div>
                               <span className="text-xs text-gray-500">{formatTimestamp(focusItem.Timestamp)}</span>
                             </div>
-                            <p className="text-gray-700 text-sm leading-relaxed">
+                            <p className="text-red-700 text-sm leading-relaxed">
                               {focusItem.Note.split('#').map((textPart, j) => 
-                                j === 0 ? textPart : <span key={j}><span className="text-red-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                                j === 0 ? textPart : <span key={j}><span className="text-blue-500 font-medium">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
                               )}
                             </p>
                             {focusItem.Tags && (
@@ -210,17 +210,15 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                                 ))}
                               </div>
                             )}
-                            {focusItem['Note Taker'] === selectedNoteTaker && (
-                              <div className="mt-3 pt-3 border-t border-red-200">
-                                <button 
-                                  onClick={() => { onDeleteNote(focusItem); hapticFeedback(); }}
-                                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
-                                >
-                                  <i className="fas fa-trash text-xs"></i>
-                                  <span>Delete Focus</span>
-                                </button>
-                              </div>
-                            )}
+                            <div className="mt-3 pt-3 border-t border-red-200">
+                              <button 
+                                onClick={() => { onDeleteNote(focusItem); hapticFeedback(); }}
+                                className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                              >
+                                <i className="fas fa-trash text-xs"></i>
+                                <span>Delete Focus</span>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -399,17 +397,15 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                                 ))}
                               </div>
                             )}
-                            {note['Note Taker'] === selectedNoteTaker && (
-                              <div className="mt-3 pt-3 border-t border-gray-200">
-                                <button 
-                                  onClick={() => { onDeleteNote(note); hapticFeedback(); }}
-                                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
-                                >
-                                  <i className="fas fa-trash text-xs"></i>
-                                  <span>Delete Note</span>
-                                </button>
-                              </div>
-                            )}
+                            <div className="mt-3 pt-3 border-t border-gray-200">
+                              <button 
+                                onClick={() => { onDeleteNote(note); hapticFeedback(); }}
+                                className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                              >
+                                <i className="fas fa-trash text-xs"></i>
+                                <span>Delete Note</span>
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>

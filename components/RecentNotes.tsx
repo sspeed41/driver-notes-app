@@ -219,15 +219,13 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                         <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-xs`}></i>
                         <span>{hasActiveReminder(originalIndex) ? 'Reminder Set' : 'Set Reminder'}</span>
                       </button>
-                      {note['Note Taker'] === selectedNoteTaker && (
-                        <button 
-                          onClick={() => { onDeleteNote(note); hapticFeedback(); }}
-                          className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
-                        >
-                          <i className="fas fa-trash text-xs"></i>
-                          <span>Delete</span>
-                        </button>
-                      )}
+                      <button 
+                        onClick={() => { onDeleteNote(note); hapticFeedback(); }}
+                        className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                      >
+                        <i className="fas fa-trash text-xs"></i>
+                        <span>Delete</span>
+                      </button>
                     </div>
                   </div>
                 </div>
