@@ -1,9 +1,38 @@
 # Driver Notes App Changelog
 
+## V3.5.0 - January 28, 2025
+
+### 🎯 New Feature: Role-Based "My View" Toggle
+- **Team-specific filtering** - Filter notes by your role and expertise area
+- **Josh Wise (Psychology)** - See only psychological notes and content
+- **Scott Speed (Technical & Tactical)** - See technical and tactical notes  
+- **Dan Jansen (Physical)** - See only physical training and fitness notes
+- **Dan Stratton (General)** - See all notes (no filtering applied)
+
+### 🎨 Visual Enhancements
+- **Color-coded role badges** - Purple=Psychology, Blue=Technical/Tactical, Green=Physical
+- **Smart toggle button** - Only appears for users with specific roles
+- **Role indicators** - Clear visual badges showing note creator's expertise area
+- **Filtered view messaging** - Shows when "My View" is active with role context
+
+### 🔧 Technical Implementation
+- **Smart filtering logic** - Checks note tags, hashtags, and content keywords
+- **Persistent preferences** - "My View" setting saved to localStorage
+- **Enhanced components** - Updated RecentNotes and AthleteDashboard with filtering
+- **New role mapping system** - `utils/roleMapping.ts` for role management
+
+### 💡 How It Works
+- Toggle "My View" in the header to see only notes relevant to your role
+- Filtering works across Recent Notes, Athlete Dashboard, and Focus Areas
+- Notes are matched by tags (#psychological, #technical, #physical) and content
+- Switch back to "All Notes" view anytime to see everything
+
+---
+
 ## V3.4.0 - January 28, 2025
 
-### 🔔 New Feature: Real-time Notifications
-- **Team notifications** - Get notified when other team members create notes
+### 🔔 New Feature: Team Notifications
+- **Real-time notifications** - Get notified when other team members create notes
 - **Browser notifications** - Native browser notifications with note preview
 - **Smart filtering** - Only shows notifications for notes from other users (not your own)
 - **Notification toggle** - Enable/disable notifications with header button
@@ -20,6 +49,17 @@
 - **Title**: "New Note: [Driver Name]" or "New Focus: [Driver Name]"
 - **Body**: "[Note Taker]: [First 100 characters of note]..."
 - **Icon**: W.O. Optimization logo
+
+### 🎨 UI Improvements
+- Added role-specific color coding (Purple=Psychology, Blue=Technical/Tactical, Green=Physical)
+- Enhanced header with role display and smart toggle button
+- Improved Recent Notes and Athlete Dashboard with role filtering
+- Clear visual indicators when filtered view is active
+
+### 🔧 Technical Improvements
+- New `utils/roleMapping.ts` for role management
+- Enhanced filtering logic in RecentNotes and AthleteDashboard components
+- Improved state management for role-based preferences
 
 ---
 

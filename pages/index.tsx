@@ -31,6 +31,9 @@ const Index = () => {
   const [loadingRecentNotes, setLoadingRecentNotes] = useState(false);
   const [replyingToNote, setReplyingToNote] = useState<DriverNote | null>(null);
   
+  // Role-based filtering state
+  const [myViewEnabled, setMyViewEnabled] = useState(false);
+  
   // Notification state
   const [lastKnownNoteCount, setLastKnownNoteCount] = useState(0);
   const [notificationsEnabled, setNotificationsEnabled] = useState(false);
@@ -84,7 +87,18 @@ const Index = () => {
     if (savedReminders) {
       setActiveReminders(JSON.parse(savedReminders));
     }
+
+    // Load saved My View preference
+    const savedMyView = localStorage.getItem('myViewEnabled');
+    if (savedMyView) {
+      setMyViewEnabled(JSON.parse(savedMyView));
+    }
   }, []);
+
+  // Save My View preference to localStorage
+  useEffect(() => {
+    localStorage.setItem('myViewEnabled', JSON.stringify(myViewEnabled));
+  }, [myViewEnabled]);
 
   // Check for due reminders
   useEffect(() => {
@@ -269,6 +283,16 @@ const Index = () => {
     hapticFeedback();
   };
 
+  const handleToggleMyView = () => {
+    setMyViewEnabled(!myViewEnabled);
+    hapticFeedback();
+    
+    setSaveStatus({
+      success: true,
+      message: myViewEnabled ? 'Showing all notes' : 'Showing role-specific notes only'
+    });
+  };
+
   const handleToggleNotifications = async () => {
     if (isIOS) {
       // For iOS devices, toggle in-app notifications
@@ -283,7 +307,7 @@ const Index = () => {
       if (newState) {
         const testNotification = {
           id: `test-${Date.now()}`,
-          title: 'Driver Notes V3.4',
+          title: 'Driver Notes V3.5',
           message: 'In-app notifications are now enabled! You\'ll be notified when team members create new notes.',
           timestamp: Date.now()
         };
@@ -342,7 +366,7 @@ const Index = () => {
             
             // Show a test notification
             setTimeout(() => {
-              new Notification('Driver Notes V3.4', {
+              new Notification('Driver Notes V3.5', {
                 body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
                 icon: '/images/W.O. LOGO - small.png'
               });
@@ -426,11 +450,11 @@ const Index = () => {
       isCompleted: false,
       isDismissed: false
     };
-    
+
     const updatedReminders = [...activeReminders, newReminder];
     setActiveReminders(updatedReminders);
     localStorage.setItem('activeReminders', JSON.stringify(updatedReminders));
-    
+
     setShowReminderModal(false);
     setReminderNote(null);
     setReminderMessage('');
@@ -653,11 +677,11 @@ const Index = () => {
       // Create new recognition instance
       const recognition = new SpeechRecognition();
       recognitionRef.current = recognition;
-      
+        
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
-      
+        
       recognition.start();
       setIsRecording(true);
 
@@ -898,7 +922,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.4</title>
+        <title>Wise Driver Notes V3.5</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
@@ -955,9 +979,11 @@ const Index = () => {
               selectedNoteTaker={selectedNoteTaker}
               activeRemindersCount={activeReminders.length}
               notificationsEnabled={notificationsEnabled}
+              myViewEnabled={myViewEnabled}
               onClearReminders={clearAllReminders}
               onChangeUser={handleChangeUser}
               onToggleNotifications={handleToggleNotifications}
+              onToggleMyView={handleToggleMyView}
               inAppNotifications={inAppNotifications}
               onDismissNotification={handleDismissNotification}
             />
@@ -1033,6 +1059,8 @@ const Index = () => {
                 recentNotes={recentNotes}
                 loadingRecentNotes={loadingRecentNotes}
                 lastRefreshTime={lastRefreshTime}
+                selectedNoteTaker={selectedNoteTaker}
+                myViewEnabled={myViewEnabled}
                 onRefresh={fetchRecentNotes}
                 onReplyToNote={handleReplyToNote}
                 onSetReminder={handleSetReminder}
@@ -1054,12 +1082,14 @@ const Index = () => {
                 selectedAthlete={selectedAthlete}
                 athleteNotes={athleteNotes}
                 loadingAthleteData={loadingAthleteData}
+                selectedNoteTaker={selectedNoteTaker}
+                myViewEnabled={myViewEnabled}
                 onSelectAthlete={(athlete) => {
                   setSelectedAthlete(athlete);
                   if (athlete) {
                     fetchAthleteData(athlete);
                   }
-                  hapticFeedback();
+                  hapticFeedback(); 
                 }}
                 onClose={() => setShowAthleteDashboard(false)}
                 onFetchAthleteData={fetchAthleteData}

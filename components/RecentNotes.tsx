@@ -1,17 +1,19 @@
 import React from 'react';
 import { DriverNote } from '../types/interfaces';
-import { formatTimestamp } from '../utils/dateHelpers';
 import DriverLogo from './DriverLogo';
+import { shouldShowNoteForUser, getRoleColor, getRoleDisplayName } from '../utils/roleMapping';
 
 interface RecentNotesProps {
   recentNotes: DriverNote[];
   loadingRecentNotes: boolean;
   lastRefreshTime: Date | null;
+  selectedNoteTaker: string;
+  myViewEnabled?: boolean;
   onRefresh: () => void;
   onReplyToNote: (note: DriverNote) => void;
   onSetReminder: (note: DriverNote) => void;
   onDeleteNote: (note: DriverNote) => void;
-  hasActiveReminder: (noteIndex: number) => boolean;
+  hasActiveReminder: (index: number) => boolean;
   hapticFeedback: () => void;
 }
 
@@ -19,6 +21,8 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   recentNotes,
   loadingRecentNotes,
   lastRefreshTime,
+  selectedNoteTaker,
+  myViewEnabled = false,
   onRefresh,
   onReplyToNote,
   onSetReminder,
@@ -26,191 +30,214 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   hasActiveReminder,
   hapticFeedback
 }) => {
-  const getTimeSinceRefresh = () => {
-    if (!lastRefreshTime) return null;
+  const formatTimestamp = (timestamp: string) => {
+    try {
+      const date = new Date(timestamp);
+      if (isNaN(date.getTime())) {
+        return 'Invalid date';
+      }
+      
+      const now = new Date();
+      const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+      
+      if (diffInMinutes < 1) return 'Just now';
+      if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
+      if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
+      return `${Math.floor(diffInMinutes / 1440)}d ago`;
+    } catch (error) {
+      console.error('Error formatting timestamp:', error);
+      return 'Unknown time';
+    }
+  };
+
+  const formatLastRefreshTime = () => {
+    if (!lastRefreshTime) return '';
+    
     const now = new Date();
-    const diffMs = now.getTime() - lastRefreshTime.getTime();
-    const diffSecs = Math.floor(diffMs / 1000);
-    if (diffSecs < 60) return 'just now';
-    const diffMins = Math.floor(diffMs / 60000);
-    if (diffMins === 1) return '1 minute ago';
-    return `${diffMins} minutes ago`;
+    const diffInMinutes = Math.floor((now.getTime() - lastRefreshTime.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) return 'Updated just now';
+    if (diffInMinutes < 60) return `Updated ${diffInMinutes}m ago`;
+    return `Updated ${Math.floor(diffInMinutes / 60)}h ago`;
+  };
+
+  // Filter notes based on My View setting
+  const filteredNotes = recentNotes.filter(note => 
+    shouldShowNoteForUser(note, selectedNoteTaker, myViewEnabled)
+  );
+
+  const getRoleColorClass = (noteTaker: string) => {
+    const color = getRoleColor(noteTaker);
+    switch (color) {
+      case 'purple': return 'text-purple-600 bg-purple-50 border-purple-200';
+      case 'blue': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'green': return 'text-green-600 bg-green-50 border-green-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-xl font-bold text-gray-900">Recent Notes</h3>
-          {lastRefreshTime && (
-            <p className="text-xs text-gray-500">
-              Updated {getTimeSinceRefresh()} • Auto-refresh every 30s
-            </p>
-          )}
-          {/* Debug info - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs text-red-500">
-              Debug: {recentNotes.length} notes loaded
-            </p>
-          )}
-        </div>
-        <button 
-          className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100 transition-all" 
-          onClick={() => { 
-            console.log('🔄 Manual refresh triggered');
-            onRefresh(); 
-            hapticFeedback(); 
-          }}
-          disabled={loadingRecentNotes}
-        >
-          <i className={`fas fa-sync-alt ${loadingRecentNotes ? 'animate-spin' : ''}`}></i>
-        </button>
-      </div>
-      
-      {/* Recent Notes Content */}
-      {loadingRecentNotes ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="flex items-center space-x-3">
-            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-            <span className="text-gray-600">Loading recent notes...</span>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center space-x-3">
+          <i className="fas fa-clock text-blue-500 text-xl"></i>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900">
+              Recent Notes
+              {myViewEnabled && (
+                <span className="ml-2 text-sm font-normal text-gray-500">
+                  ({getRoleDisplayName(selectedNoteTaker)} View)
+                </span>
+              )}
+            </h2>
+            {lastRefreshTime && (
+              <p className="text-sm text-gray-500">{formatLastRefreshTime()}</p>
+            )}
           </div>
         </div>
-      ) : recentNotes.length > 0 ? (
-        recentNotes.map((note, index) => {
-          // Add safety checks for note data
-          if (!note || !note.Driver || !note.Note) {
-            console.warn('⚠️ Skipping malformed note at index', index, note);
-            return null;
-          }
+        <button 
+          onClick={() => { onRefresh(); hapticFeedback(); }}
+          className="flex items-center space-x-2 px-3 py-2 text-gray-600 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
+          disabled={loadingRecentNotes}
+        >
+          <i className={`fas fa-sync-alt text-sm ${loadingRecentNotes ? 'animate-spin' : ''}`}></i>
+          <span className="text-sm">Refresh</span>
+        </button>
+      </div>
 
-          return (
-            <div key={`${note.Driver}-${note.Timestamp}-${index}`} 
-              className={`rounded-2xl shadow-sm border p-6 transition-colors ${
-                note.Type === 'Focus' 
-                  ? 'bg-red-50 border-red-200' 
-                  : 'bg-white border-gray-200'
-              }`}>
-              <div className="flex items-start space-x-4">
-                <DriverLogo driverName={note.Driver} size="md" />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                    <span className="font-semibold text-gray-900">{note.Driver}</span>
-                    {note.Type === 'Focus' && (
-                      <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
-                        🎯 Focus
+      {loadingRecentNotes ? (
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+          <span className="ml-3 text-gray-600">Loading recent notes...</span>
+        </div>
+      ) : filteredNotes.length === 0 ? (
+        <div className="text-center py-8">
+          <i className="fas fa-sticky-note text-gray-300 text-4xl mb-4"></i>
+          <p className="text-gray-500">
+            {myViewEnabled 
+              ? `No ${getRoleDisplayName(selectedNoteTaker).toLowerCase()} notes found. Try switching to "All Notes" view.`
+              : 'No recent notes found. Create your first note above!'
+            }
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {filteredNotes.map((note, index) => {
+            // Add safety checks for note data
+            if (!note || !note.Driver || !note.Note) {
+              console.warn('Invalid note data:', note);
+              return null;
+            }
+
+            const originalIndex = recentNotes.findIndex(originalNote => 
+              originalNote.Driver === note.Driver && 
+              originalNote.Timestamp === note.Timestamp &&
+              originalNote.Note === note.Note
+            );
+
+            return (
+              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 transition-colors">
+                <div className="flex items-start space-x-4">
+                  <DriverLogo driverName={note.Driver} size="md" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
+                      <span className="font-semibold text-gray-900">{note.Driver}</span>
+                      {note.Type === 'Focus' && (
+                        <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
+                          🎯 Focus
+                        </span>
+                      )}
+                      <span className="text-gray-400">•</span>
+                      <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(note['Note Taker'] || 'Unknown')}`}>
+                        {getRoleDisplayName(note['Note Taker'] || 'Unknown')}
                       </span>
-                    )}
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
-                    <span className="text-gray-400">•</span>
-                    <span className="text-gray-500 text-sm">
-                      {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
-                    </span>
-                  </div>
-                  {/* Note Content with Comments */}
-                  <div className={`mb-4 leading-relaxed ${note.Type === 'Focus' ? 'text-red-900 font-medium' : 'text-gray-700'}`}>
-                    {(() => {
-                      // Split the note into lines to separate original note from comments
-                      const lines = note.Note.split('\n');
-                      const originalNote = lines[0];
-                      const comments = lines.slice(1).filter(line => line.trim() !== '');
-                      
-                      return (
-                        <>
-                          {/* Original Note */}
-                          <div>
-                            {originalNote.split('#').map((textPart, j) => 
-                              j === 0 ? textPart : <span key={j}><span className="text-blue-500">#{textPart.split(' ')[0]}</span>{textPart.substring(textPart.indexOf(' '))}</span>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                      <span className="text-gray-400">•</span>
+                      <span className="text-gray-500 text-sm">
+                        {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
+                      </span>
+                    </div>
+                    {/* Note Content with Comments */}
+                    <div className="text-gray-700 text-sm leading-relaxed mb-3">
+                      {note.Note.split('\n').map((line, lineIndex) => {
+                        // Check if this line is a comment (starts with "Comment by")
+                        if (line.includes('Comment by ')) {
+                          const parts = line.split('Comment by ');
+                          return (
+                            <div key={lineIndex} className="mt-2 pl-4 border-l-2 border-blue-200 bg-blue-50 p-2 rounded-r">
+                              <div className="text-blue-600 text-xs font-medium mb-1">
+                                💬 Comment by {parts[1]?.split(':')[0] || 'Unknown'}
+                              </div>
+                              <div className="text-gray-700">
+                                {parts[1]?.substring(parts[1].indexOf(':') + 1)?.trim() || ''}
+                              </div>
+                            </div>
+                          );
+                        }
+                        
+                        // Regular note content with hashtag highlighting
+                        return (
+                          <div key={lineIndex}>
+                            {line.split('#').map((textPart, j) => 
+                              j === 0 ? textPart : (
+                                <span key={j}>
+                                  <span className="text-blue-500 font-medium">#{textPart.split(' ')[0]}</span>
+                                  {textPart.substring(textPart.indexOf(' '))}
+                                </span>
+                              )
                             )}
                           </div>
-                          
-                          {/* Comments */}
-                          {comments.length > 0 && (
-                            <div className="mt-3 space-y-2">
-                              {comments.map((comment, commentIndex) => {
-                                // Check if this line is a comment
-                                if (comment.includes('commented:')) {
-                                  return (
-                                    <div key={commentIndex} className="pl-4 border-l-2 border-gray-200">
-                                      <div className="text-gray-600 text-sm italic">
-                                        {comment}
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                // If it's not a comment, render as regular text (shouldn't happen but just in case)
-                                return (
-                                  <div key={commentIndex} className="text-gray-700 text-sm">
-                                    {comment}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </>
-                      );
-                    })()}
-                  </div>
-                  {note.Tags && (
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                        <span key={tagIndex} className={`px-3 py-1 rounded-full text-sm ${
-                          note.Type === 'Focus' 
-                            ? 'bg-red-100 text-red-700' 
-                            : 'bg-blue-100 text-blue-700'
-                        }`}>
-                          #{tag.trim()}
-                        </span>
-                      ))}
+                        );
+                      })}
                     </div>
-                  )}
-                  <div className="flex items-center justify-center space-x-4 text-gray-500">
-                    <button 
-                      className="flex items-center space-x-2 hover:text-gray-700 transition-colors p-2 rounded-lg hover:bg-gray-100"
-                      onClick={() => onReplyToNote(note)}
-                    >
-                      <i className="fas fa-comment text-sm"></i>
-                      <span className="text-sm">Comment</span>
-                    </button>
-                    <button 
-                      className={`flex items-center space-x-2 transition-colors p-2 rounded-lg hover:bg-gray-100 ${
-                        hasActiveReminder(index)
-                          ? 'text-yellow-400 hover:text-yellow-500'
-                          : 'hover:text-yellow-400'
-                      }`}
-                      onClick={() => onSetReminder(note)}
-                    >
-                      <i className={`fas fa-bell text-sm ${hasActiveReminder(index) ? 'text-yellow-400' : ''}`}></i>
-                      {!hasActiveReminder(index) && <span className="text-sm">Remind</span>}
-                    </button>
-                    <button 
-                      className="flex items-center space-x-2 hover:text-red-500 transition-colors p-2 rounded-lg hover:bg-red-50"
-                      onClick={() => onDeleteNote(note)}
-                    >
-                      <i className="fas fa-times text-sm"></i>
-                      <span className="text-sm">Delete</span>
-                    </button>
+
+                    {/* Tags */}
+                    {note.Tags && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {note.Tags.split(',').map((tag: string, tagIndex: number) => (
+                          <span key={tagIndex} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                            #{tag.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={() => { onReplyToNote(note); hapticFeedback(); }}
+                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+                      >
+                        <i className="fas fa-reply text-xs"></i>
+                        <span>Reply</span>
+                      </button>
+                      <button 
+                        onClick={() => { onSetReminder(note); hapticFeedback(); }}
+                        className={`flex items-center space-x-1 text-sm ${
+                          hasActiveReminder(originalIndex) 
+                            ? 'text-orange-600 hover:text-orange-700' 
+                            : 'text-gray-600 hover:text-gray-700'
+                        }`}
+                      >
+                        <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-xs`}></i>
+                        <span>{hasActiveReminder(originalIndex) ? 'Reminder Set' : 'Set Reminder'}</span>
+                      </button>
+                      {note['Note Taker'] === selectedNoteTaker && (
+                        <button 
+                          onClick={() => { onDeleteNote(note); hapticFeedback(); }}
+                          className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                        >
+                          <i className="fas fa-trash text-xs"></i>
+                          <span>Delete</span>
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          );
-        }).filter(Boolean) // Remove null entries from malformed notes
-      ) : (
-        <div className="flex flex-col items-center justify-center py-12 text-center">
-          <i className="fas fa-clipboard-list text-gray-400 text-4xl mb-4"></i>
-          <h3 className="text-lg font-semibold text-gray-600 mb-2">
-            No Recent Notes
-          </h3>
-          <p className="text-gray-500 text-sm">
-            Start by creating your first driver note above.
-          </p>
-          {/* Debug info - remove in production */}
-          {process.env.NODE_ENV === 'development' && (
-            <p className="text-xs text-red-500 mt-2">
-              Debug: Check browser console for loading errors
-            </p>
-          )}
+            );
+          })}
         </div>
       )}
     </div>

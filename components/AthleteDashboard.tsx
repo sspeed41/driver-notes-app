@@ -4,11 +4,14 @@ import { drivers } from '../data/drivers';
 import { athleteProfiles, AthleteProfile } from '../data/athleteProfiles';
 import DriverLogo from './DriverLogo';
 import { formatTimestamp } from '../utils/helpers';
+import { shouldShowNoteForUser, getRoleColor, getRoleDisplayName } from '../utils/roleMapping';
 
 interface AthleteDashboardProps {
   selectedAthlete: string;
   athleteNotes: DriverNote[];
   loadingAthleteData: boolean;
+  selectedNoteTaker: string;
+  myViewEnabled?: boolean;
   onSelectAthlete: (athlete: string) => void;
   onClose: () => void;
   onFetchAthleteData: (athlete: string) => void;
@@ -20,6 +23,8 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
   selectedAthlete,
   athleteNotes,
   loadingAthleteData,
+  selectedNoteTaker,
+  myViewEnabled = false,
   onSelectAthlete,
   onClose,
   onFetchAthleteData,
@@ -78,6 +83,21 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
       setEditedProfiles(rest);
     }
     hapticFeedback();
+  };
+
+  // Filter notes based on My View setting
+  const filteredNotes = athleteNotes.filter(note => 
+    shouldShowNoteForUser(note, selectedNoteTaker, myViewEnabled)
+  );
+
+  const getRoleColorClass = (noteTaker: string) => {
+    const color = getRoleColor(noteTaker);
+    switch (color) {
+      case 'purple': return 'text-purple-600 bg-purple-50 border-purple-200';
+      case 'blue': return 'text-blue-600 bg-blue-50 border-blue-200';
+      case 'green': return 'text-green-600 bg-green-50 border-green-200';
+      default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    }
   };
 
   return (
@@ -149,7 +169,7 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
 
               {/* Focus Items */}
               {(() => {
-                const focusItems = athleteNotes.filter(note => note.Type === 'Focus');
+                const focusItems = filteredNotes.filter(note => note.Type === 'Focus');
                 return (
                   <div className={`bg-gradient-to-r from-red-50 to-orange-50 border-2 border-red-200 rounded-2xl p-6 mb-6 ${
                     focusItems.length === 0 ? 'opacity-50' : ''
@@ -169,6 +189,9 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                           <div key={index} className="bg-white border border-red-200 rounded-xl p-4 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
+                                <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(focusItem['Note Taker'])}`}>
+                                  {getRoleDisplayName(focusItem['Note Taker'])}
+                                </span>
                                 <span className="text-sm font-medium text-gray-900">{focusItem['Note Taker']}</span>
                                 <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
                                   Focus
@@ -188,6 +211,17 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                                     #{tag.trim()}
                                   </span>
                                 ))}
+                              </div>
+                            )}
+                            {focusItem['Note Taker'] === selectedNoteTaker && (
+                              <div className="mt-3 pt-3 border-t border-red-200">
+                                <button 
+                                  onClick={() => { onDeleteNote(focusItem); hapticFeedback(); }}
+                                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                                >
+                                  <i className="fas fa-trash text-xs"></i>
+                                  <span>Delete Focus</span>
+                                </button>
                               </div>
                             )}
                           </div>
@@ -327,7 +361,7 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
               <div className="bg-gray-50 rounded-xl p-6 border border-gray-200">
                 <h4 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
                   <i className="fas fa-clipboard-list text-blue-500 mr-2"></i>
-                  Recent Notes ({athleteNotes.filter(note => note.Type !== 'Focus').length})
+                  Recent Notes ({filteredNotes.filter(note => note.Type !== 'Focus').length})
                 </h4>
                 {loadingAthleteData ? (
                   <div className="flex items-center justify-center py-8">
@@ -338,13 +372,16 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                   </div>
                 ) : (
                   (() => {
-                    const regularNotes = athleteNotes.filter(note => note.Type !== 'Focus');
+                    const regularNotes = filteredNotes.filter(note => note.Type !== 'Focus');
                     return regularNotes.length > 0 ? (
                       <div className="space-y-3 max-h-64 overflow-y-auto">
                         {regularNotes.map((note, index) => (
                           <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
+                                <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(note['Note Taker'])}`}>
+                                  {getRoleDisplayName(note['Note Taker'])}
+                                </span>
                                 <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
                                 {note.Type && note.Type !== 'Note' && (
                                   <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
@@ -366,6 +403,17 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                                     #{tag.trim()}
                                   </span>
                                 ))}
+                              </div>
+                            )}
+                            {note['Note Taker'] === selectedNoteTaker && (
+                              <div className="mt-3 pt-3 border-t border-gray-200">
+                                <button 
+                                  onClick={() => { onDeleteNote(note); hapticFeedback(); }}
+                                  className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                                >
+                                  <i className="fas fa-trash text-xs"></i>
+                                  <span>Delete Note</span>
+                                </button>
                               </div>
                             )}
                           </div>
