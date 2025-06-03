@@ -68,7 +68,7 @@ const Header: React.FC<HeaderProps> = ({
               className="w-10 h-10 object-contain"
             />
             <div>
-              <h1 className="text-xl font-semibold text-gray-900">Driver Notes V3.6</h1>
+              <h1 className="text-xl font-semibold text-gray-900">Driver Notes V3.6.1</h1>
               <p className="text-sm text-gray-500">
                 {selectedNoteTaker} • {userRole ? userRole.role : 'General'} • Live
               </p>

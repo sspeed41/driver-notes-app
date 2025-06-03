@@ -189,9 +189,6 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                           <div key={index} className="bg-white border border-red-200 rounded-xl p-4 shadow-sm">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
-                                <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(focusItem['Note Taker'])}`}>
-                                  {getRoleDisplayName(focusItem['Note Taker'])}
-                                </span>
                                 <span className="text-sm font-medium text-gray-900">{focusItem['Note Taker']}</span>
                                 <span className="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">
                                   Focus
@@ -379,9 +376,6 @@ const AthleteDashboard: React.FC<AthleteDashboardProps> = ({
                           <div key={index} className="bg-white rounded-lg p-4 border border-gray-200">
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center space-x-2">
-                                <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(note['Note Taker'])}`}>
-                                  {getRoleDisplayName(note['Note Taker'])}
-                                </span>
                                 <span className="text-sm font-medium text-gray-900">{note['Note Taker']}</span>
                                 {note.Type && note.Type !== 'Note' && (
                                   <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">

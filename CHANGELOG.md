@@ -1,5 +1,27 @@
 # Driver Notes App Changelog
 
+## V3.6.1 - January 28, 2025
+
+### 🎨 UI Cleanup & Navigation Improvements
+- **Removed role badges** from note displays - Now shows only note taker name and timestamp for cleaner look
+- **Replaced Search with Home** - Second navigation button now takes you back to main page
+- **Simplified note headers** - Cleaner, more readable note information display
+- **Consistent navigation** - Home button provides reliable way to return to main view
+
+### 🔧 Changes Made
+- **RecentNotes**: Removed Psychology/Technical/Physical role badges under athlete names
+- **AthleteDashboard**: Removed role badges from both focus items and regular notes
+- **BottomNavigation**: Replaced "Search" with "Home" button for better UX
+- **Visual Cleanup**: Notes now show: Driver Name • Note Taker • Timestamp (no role tags)
+
+### 💡 User Experience
+- **Cleaner Interface** - Less visual clutter in note displays
+- **Better Navigation** - Reliable Home button for returning to main page
+- **Faster Scanning** - Easier to read note information without extra badges
+- **Consistent Layout** - Uniform note display across all views
+
+---
+
 ## V3.6.0 - January 28, 2025
 
 ### 🎯 Major Navigation Overhaul

@@ -148,10 +148,6 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                         </span>
                       )}
                       <span className="text-gray-400">•</span>
-                      <span className={`text-sm px-2 py-1 rounded-full border ${getRoleColorClass(note['Note Taker'] || 'Unknown')}`}>
-                        {getRoleDisplayName(note['Note Taker'] || 'Unknown')}
-                      </span>
-                      <span className="text-gray-400">•</span>
                       <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
                       <span className="text-gray-400">•</span>
                       <span className="text-gray-500 text-sm">

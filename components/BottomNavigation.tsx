@@ -69,10 +69,16 @@ const BottomNavigation: React.FC<BottomNavigationProps> = ({
           </span>
         </button>
 
-        {/* Search */}
-        <button className="flex flex-col items-center space-y-1 p-2" onClick={hapticFeedback}>
-          <i className="fas fa-search text-gray-400 text-lg"></i>
-          <span className="text-xs text-gray-500">Search</span>
+        {/* Home */}
+        <button 
+          className="flex flex-col items-center space-y-1 p-2" 
+          onClick={() => { 
+            onNavigateHome(); 
+            hapticFeedback(); 
+          }}
+        >
+          <i className={`fas fa-home text-lg ${currentView === 'home' ? 'text-blue-500' : 'text-gray-400'}`}></i>
+          <span className="text-xs text-gray-500">Home</span>
         </button>
 
         {/* Note Creation */}
