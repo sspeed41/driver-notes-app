@@ -12,6 +12,14 @@ import { drivers } from '../data/drivers';
 import { noteTakers } from '../data/noteTakers';
 import { hapticFeedback, extractTags } from '../utils/helpers';
 
+// TypeScript declarations for Speech Recognition API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 const Index = () => {
   // Navigation state
   const [currentView, setCurrentView] = useState<'home' | 'note-creation' | 'athletes'>('home');
@@ -612,10 +620,15 @@ const Index = () => {
                            note.Driver && 
                            note.Note && 
                            note.Timestamp && 
-                           note.Timestamp !== 'Invalid Date';
+                           note.Timestamp !== 'Invalid Date' &&
+                           !isNaN(new Date(note.Timestamp).getTime()); // Additional check for valid date
             
             if (!isValid) {
-              console.warn('⚠️ Invalid note filtered out:', note);
+              console.warn('⚠️ Invalid note filtered out:', {
+                driver: note?.Driver,
+                timestamp: note?.Timestamp,
+                hasNote: !!note?.Note
+              });
             }
             
             return isValid;
@@ -988,7 +1001,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.6.2</title>
+        <title>Wise Driver Notes V3.6.3</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}

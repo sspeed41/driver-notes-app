@@ -1,5 +1,4 @@
 import React from 'react';
-import { getUserRole } from '../utils/roleMapping';
 
 interface HeaderProps {
   selectedNoteTaker: string;
@@ -27,8 +26,6 @@ const Header: React.FC<HeaderProps> = ({
   inAppNotifications = [],
   onDismissNotification
 }) => {
-  const userRole = getUserRole(selectedNoteTaker);
-
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
       {/* In-app Notifications */}
@@ -67,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
               alt="W.O." 
               className="w-8 h-8 object-contain"
             />
-            <h1 className="text-lg font-semibold text-gray-900">Driver Notes V3.6.2</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Driver Notes V3.6.3</h1>
           </div>
           
           {/* Status and Menu */}
