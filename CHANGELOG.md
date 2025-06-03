@@ -1,5 +1,28 @@
 # Driver Notes App Changelog
 
+## V3.6.2 - January 28, 2025
+
+### 🎨 Header Cleanup & Size Reduction
+- **Removed role labels** from header subtitle - No more "Technical & Tactical" or "Psychology" labels
+- **Smaller header** - Reduced padding and logo size for more screen space
+- **Simplified layout** - Clean title-only header design
+- **Compact design** - More room for content with streamlined header
+
+### 🔧 Changes Made
+- **Removed subtitle** - No longer shows "Scott Speed • Technical & Tactical • Live"
+- **Reduced header padding** - From py-4 to py-3 for smaller height
+- **Smaller logo** - From w-10 h-10 to w-8 h-8 for better proportions
+- **Simplified status** - Just shows "Live" instead of "Connected"
+- **Tighter spacing** - Reduced gaps between header elements
+
+### 💡 User Experience
+- **More screen space** - Smaller header means more room for notes and content
+- **Cleaner look** - Less visual clutter in the header area
+- **Better mobile experience** - More efficient use of limited screen space
+- **Faster scanning** - Essential information only in header
+
+---
+
 ## V3.6.1 - January 28, 2025
 
 ### 🎨 UI Cleanup & Navigation Improvements
