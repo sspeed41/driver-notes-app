@@ -3,12 +3,9 @@ import Head from 'next/head';
 import UserSelection from '../components/UserSelection';
 import Header from '../components/Header';
 import BottomNavigation from '../components/BottomNavigation';
-import Reminders from '../components/Reminders';
-import NoteInputSection from '../components/NoteInputSection';
-import NoteTypeSelector from '../components/NoteTypeSelector';
-import RecentNotes from '../components/RecentNotes';
+import HomeView from '../components/HomeView';
+import NoteCreationView from '../components/NoteCreationView';
 import AthleteDashboard from '../components/AthleteDashboard';
-import DiagnosticPanel from '../components/DiagnosticPanel';
 import { ReminderModal, ReminderDetailModal } from '../components/ReminderModal';
 import { DriverNote, Reminder } from '../types/interfaces';
 import { drivers } from '../data/drivers';
@@ -16,6 +13,9 @@ import { noteTakers } from '../data/noteTakers';
 import { hapticFeedback, extractTags } from '../utils/helpers';
 
 const Index = () => {
+  // Navigation state
+  const [currentView, setCurrentView] = useState<'home' | 'note-creation' | 'athletes'>('home');
+  
   // State management
   const [noteText, setNoteText] = useState('');
   const [isRecording, setIsRecording] = useState(false);
@@ -269,6 +269,29 @@ const Index = () => {
     };
   }, [showTagDropdown]);
 
+  // Navigation handlers
+  const handleNavigateHome = () => {
+    setCurrentView('home');
+    hapticFeedback();
+  };
+
+  const handleNavigateNoteCreation = () => {
+    setCurrentView('note-creation');
+    hapticFeedback();
+  };
+
+  const handleOpenAthleteDashboard = () => {
+    setCurrentView('athletes');
+    setShowAthleteDashboard(true);
+    hapticFeedback();
+  };
+
+  const handleCloseAthleteDashboard = () => {
+    setShowAthleteDashboard(false);
+    setCurrentView('home');
+    hapticFeedback();
+  };
+
   // User selection handlers
   const handleUserSelection = (noteTaker: string) => {
     setSelectedNoteTaker(noteTaker);
@@ -396,12 +419,7 @@ const Index = () => {
     setSelectedDriver(note.Driver);
     setNoteText(`Comment: `);
     setReplyingToNote(note);
-    
-    // Scroll to the note input area
-    const noteSection = document.querySelector('.note-input-section');
-    if (noteSection) {
-      noteSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }
+    setCurrentView('note-creation'); // Navigate to note creation view
     
     // Focus the textarea after a short delay
     setTimeout(() => {
@@ -793,6 +811,7 @@ const Index = () => {
           });
           setNoteText('');
           setReplyingToNote(null);
+          setCurrentView('home'); // Navigate back to home after saving
           // Add delay to ensure Google Sheets has updated
           setTimeout(() => {
             fetchRecentNotes();
@@ -827,6 +846,7 @@ const Index = () => {
           setNoteText('');
           setSelectedTags([]);
           setSelectedNoteType('Note'); // Reset to default
+          setCurrentView('home'); // Navigate back to home after saving
           // Add delay to ensure Google Sheets has updated
           setTimeout(() => {
             fetchRecentNotes();
@@ -844,17 +864,6 @@ const Index = () => {
     } finally {
       setIsSaving(false);
     }
-  };
-
-  const openAthleteDashboard = (athlete?: string) => {
-    if (athlete) {
-      setSelectedAthlete(athlete);
-      fetchAthleteData(athlete);
-    } else {
-      setSelectedAthlete('');
-    }
-    setShowAthleteDashboard(true);
-    hapticFeedback();
   };
 
   const fetchAthleteData = async (athlete: string) => {
@@ -919,10 +928,67 @@ const Index = () => {
     hapticFeedback();
   };
 
+  const renderCurrentView = () => {
+    switch (currentView) {
+      case 'home':
+        return (
+          <HomeView
+            recentNotes={recentNotes}
+            loadingRecentNotes={loadingRecentNotes}
+            lastRefreshTime={lastRefreshTime}
+            selectedNoteTaker={selectedNoteTaker}
+            myViewEnabled={myViewEnabled}
+            dueReminders={getDueReminders()}
+            upcomingReminders={getUpcomingReminders()}
+            onRefresh={fetchRecentNotes}
+            onReplyToNote={handleReplyToNote}
+            onSetReminder={handleSetReminder}
+            onDeleteNote={handleDeleteNote}
+            onCompleteReminder={handleCompleteReminder}
+            onDismissReminder={handleDismissReminder}
+            onViewReminderDetail={(reminder) => {
+              setSelectedReminderDetail(reminder);
+              setShowReminderDetail(true);
+              hapticFeedback();
+            }}
+            hasActiveReminder={hasActiveReminder}
+            hapticFeedback={hapticFeedback}
+          />
+        );
+      case 'note-creation':
+        return (
+          <NoteCreationView
+            selectedDriver={selectedDriver}
+            noteText={noteText}
+            isRecording={isRecording}
+            isSaving={isSaving}
+            selectedTags={selectedTags}
+            showTagDropdown={showTagDropdown}
+            selectedNoteType={selectedNoteType}
+            saveStatus={saveStatus}
+            recentNotes={recentNotes}
+            loadingRecentNotes={loadingRecentNotes}
+            lastRefreshTime={lastRefreshTime}
+            onDriverChange={setSelectedDriver}
+            onNoteTextChange={setNoteText}
+            onRecord={handleRecord}
+            onSaveNote={handleSaveNote}
+            onToggleTagDropdown={toggleTagDropdown}
+            onTagSelect={handleTagSelect}
+            onNoteTypeChange={setSelectedNoteType}
+            onRefreshNotes={fetchRecentNotes}
+            hapticFeedback={hapticFeedback}
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.5</title>
+        <title>Wise Driver Notes V3.6</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
@@ -979,100 +1045,27 @@ const Index = () => {
               selectedNoteTaker={selectedNoteTaker}
               activeRemindersCount={activeReminders.length}
               notificationsEnabled={notificationsEnabled}
-              myViewEnabled={myViewEnabled}
               onClearReminders={clearAllReminders}
               onChangeUser={handleChangeUser}
               onToggleNotifications={handleToggleNotifications}
-              onToggleMyView={handleToggleMyView}
               inAppNotifications={inAppNotifications}
               onDismissNotification={handleDismissNotification}
             />
 
             {/* Main Content */}
-            <main className="max-w-4xl mx-auto px-4 py-6 pb-24">
-              {/* Reminders */}
-              <Reminders
-                dueReminders={getDueReminders()}
-                upcomingReminders={getUpcomingReminders()}
-                onCompleteReminder={handleCompleteReminder}
-                onDismissReminder={handleDismissReminder}
-                onViewDetail={(reminder) => {
-                  setSelectedReminderDetail(reminder);
-                  setShowReminderDetail(true);
-                  hapticFeedback();
-                }}
-                hapticFeedback={hapticFeedback}
-              />
-
-              {/* Driver Selection */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 mb-6">
-                <div className="flex items-center space-x-3 mb-4">
-                  <i className="fas fa-user-circle text-blue-500 text-xl"></i>
-                  <h2 className="text-lg font-semibold text-gray-900">Driver</h2>
-                </div>
-                <select 
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors text-lg text-gray-900 bg-white"
-                  value={selectedDriver}
-                  onChange={(e) => setSelectedDriver(e.target.value)}
-                >
-                  <option value="" className="text-gray-500">Select driver...</option>
-                  {drivers.map(driver => (
-                    <option key={driver} value={driver} className="text-gray-900">{driver}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Note Type Selection */}
-              <NoteTypeSelector
-                selectedType={selectedNoteType}
-                onTypeChange={setSelectedNoteType}
-                hapticFeedback={hapticFeedback}
-              />
-
-              {/* Note Input Section */}
-              <NoteInputSection
-                selectedDriver={selectedDriver}
-                noteText={noteText}
-                isRecording={isRecording}
-                isSaving={isSaving}
-                selectedTags={selectedTags}
-                showTagDropdown={showTagDropdown}
-                saveStatus={saveStatus}
-                onNoteTextChange={setNoteText}
-                onRecord={handleRecord}
-                onSaveNote={handleSaveNote}
-                onToggleTagDropdown={toggleTagDropdown}
-                onTagSelect={handleTagSelect}
-                hapticFeedback={hapticFeedback}
-              />
-
-              {/* Diagnostic Panel - Development Only */}
-              <DiagnosticPanel
-                recentNotes={recentNotes}
-                loadingRecentNotes={loadingRecentNotes}
-                lastRefreshTime={lastRefreshTime}
-                onRefresh={fetchRecentNotes}
-              />
-
-              {/* Recent Notes Feed */}
-              <RecentNotes
-                recentNotes={recentNotes}
-                loadingRecentNotes={loadingRecentNotes}
-                lastRefreshTime={lastRefreshTime}
-                selectedNoteTaker={selectedNoteTaker}
-                myViewEnabled={myViewEnabled}
-                onRefresh={fetchRecentNotes}
-                onReplyToNote={handleReplyToNote}
-                onSetReminder={handleSetReminder}
-                onDeleteNote={handleDeleteNote}
-                hasActiveReminder={hasActiveReminder}
-                hapticFeedback={hapticFeedback}
-              />
+            <main>
+              {renderCurrentView()}
             </main>
 
             {/* Bottom Navigation */}
             <BottomNavigation
-              onOpenAthleteDashboard={() => openAthleteDashboard()}
+              selectedNoteTaker={selectedNoteTaker}
+              myViewEnabled={myViewEnabled}
+              currentView={currentView}
+              onOpenAthleteDashboard={handleOpenAthleteDashboard}
+              onToggleMyView={handleToggleMyView}
+              onNavigateHome={handleNavigateHome}
+              onNavigateNoteCreation={handleNavigateNoteCreation}
               hapticFeedback={hapticFeedback}
             />
 
@@ -1091,7 +1084,7 @@ const Index = () => {
                   }
                   hapticFeedback(); 
                 }}
-                onClose={() => setShowAthleteDashboard(false)}
+                onClose={handleCloseAthleteDashboard}
                 onFetchAthleteData={fetchAthleteData}
                 onDeleteNote={handleDeleteNote}
                 hapticFeedback={hapticFeedback}

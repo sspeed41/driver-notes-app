@@ -1,5 +1,33 @@
 # Driver Notes App Changelog
 
+## V3.6.0 - January 28, 2025
+
+### 🎯 Major Navigation Overhaul
+- **Simplified Home Page** - Clean interface showing only reminders and recent notes
+- **Dedicated Note Creation** - Full note creation interface moved to "+Note" button
+- **Smart Bottom Navigation** - "My View" toggle moved from header to bottom nav
+- **Cleaner Header** - Removed clutter, focused on essential information only
+
+### 🎨 UI/UX Improvements
+- **Role-based My View** - Filter toggle now in bottom navigation with role-specific colors
+- **Visual Navigation States** - Active view indicators in bottom navigation
+- **Streamlined Workflow** - Separate views for browsing vs. creating content
+- **Mobile-First Design** - Better thumb-friendly navigation placement
+
+### 🔧 Technical Architecture
+- **New Component Structure** - `HomeView` and `NoteCreationView` components
+- **Enhanced Navigation State** - Proper view management with React state
+- **Modular Design** - Cleaner separation of concerns between views
+- **Improved Props Flow** - Better component communication patterns
+
+### 💡 User Experience
+- **Faster Note Browsing** - Home page loads instantly with just notes and reminders
+- **Focused Note Creation** - Dedicated space for creating notes without distractions
+- **Intuitive Navigation** - Bottom navigation follows mobile app conventions
+- **Role-Specific Filtering** - My View toggle easily accessible for team members
+
+---
+
 ## V3.5.0 - January 28, 2025
 
 ### 🎯 New Feature: Role-Based "My View" Toggle
