@@ -250,15 +250,19 @@ const Index = () => {
     if (!showUserSelection) {
       fetchRecentNotes();
       
-      // Auto-refresh recent notes every 30 seconds
-      const interval = setInterval(() => {
-        // Only refresh if not in the middle of other operations
-        if (!isSaving && !loadingRecentNotes && !showAthleteDashboard && !showReminderModal) {
+      // Auto-refresh recent notes when app becomes visible (user returns to the app)
+      const handleVisibilityChange = () => {
+        if (!document.hidden && !isSaving && !loadingRecentNotes && !showAthleteDashboard && !showReminderModal) {
           fetchRecentNotes();
         }
-      }, 30000); // 30 seconds
+      };
       
-      return () => clearInterval(interval);
+      // Listen for visibility changes
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+      
+      return () => {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      };
     }
   }, [showUserSelection, isSaving, showAthleteDashboard, showReminderModal]);
 
