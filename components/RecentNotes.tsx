@@ -121,7 +121,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-2">
           {filteredNotes.map((note, index) => {
             // Add safety checks for note data
             if (!note || !note.Driver || !note.Note) {
@@ -136,54 +136,52 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
             );
 
             return (
-              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                {/* X-Style Layout: Avatar + Content */}
+              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-white rounded-xl p-3 border border-gray-200 hover:border-gray-300 transition-colors">
+                {/* X-Style Compact Layout */}
                 <div className="flex items-start space-x-3">
-                  {/* Avatar */}
-                  <div className="flex-shrink-0">
-                    <DriverLogo driverName={note.Driver} size="md" />
+                  {/* Smaller Avatar */}
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs font-bold text-gray-600">
+                      {note.Driver ? note.Driver.split(' ').map(n => n[0]).join('').substring(0, 2) : '??'}
+                    </span>
                   </div>
                   
                   {/* Content Area */}
                   <div className="flex-1 min-w-0">
-                    {/* Inline Metadata */}
-                    <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{note['Note Taker'] || 'Unknown'}</span>
-                      <span className="text-gray-400">•</span>
-                      <span className="text-gray-500 text-sm">{note.Driver}</span>
-                      {note.Type === 'Focus' && (
-                        <>
-                          <span className="text-gray-400">•</span>
-                          <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
-                            🎯 Focus
-                          </span>
-                        </>
-                      )}
+                    {/* X-Style Inline Header */}
+                    <div className="flex items-center space-x-1 mb-1">
+                      <span className="font-semibold text-gray-900 text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                      <span className="text-gray-400 text-sm">@{note.Driver?.toLowerCase().replace(' ', '')}</span>
                       <span className="text-gray-400">•</span>
                       <span className="text-gray-500 text-sm">
-                        {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
+                        {note.Timestamp ? formatTimestamp(note.Timestamp) : '?'}
                       </span>
+                      {note.Type === 'Focus' && (
+                        <span className="px-2 py-0.5 bg-red-500 text-white rounded-full text-xs font-medium ml-2">
+                          🎯
+                        </span>
+                      )}
                     </div>
                     
-                    {/* Note Content */}
-                    <div className="text-gray-700 text-sm leading-relaxed mb-3">
+                    {/* X-Style Tweet Content */}
+                    <div className="text-gray-900 text-base leading-relaxed mb-3">
                       {note.Note.split('\n').map((line, lineIndex) => {
-                        // Check if this line is a comment (starts with "Comment by")
+                        // Check if this line is a comment
                         if (line.includes('Comment by ')) {
                           const parts = line.split('Comment by ');
                           return (
-                            <div key={lineIndex} className="mt-2 pl-3 border-l-2 border-blue-200 bg-blue-50 p-2 rounded-r">
-                              <div className="text-blue-600 text-xs font-medium mb-1">
-                                💬 Comment by {parts[1]?.split(':')[0] || 'Unknown'}
+                            <div key={lineIndex} className="mt-2 pl-3 border-l-2 border-gray-300 bg-gray-50 p-2 rounded">
+                              <div className="text-gray-600 text-sm font-medium mb-1">
+                                💬 {parts[1]?.split(':')[0] || 'Unknown'}
                               </div>
-                              <div className="text-gray-700">
+                              <div className="text-gray-800">
                                 {parts[1]?.substring(parts[1].indexOf(':') + 1)?.trim() || ''}
                               </div>
                             </div>
                           );
                         }
                         
-                        // Regular note content with hashtag highlighting
+                        // Regular content with hashtag highlighting
                         return (
                           <div key={lineIndex}>
                             {line.split('#').map((textPart, j) => 
@@ -199,42 +197,31 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       })}
                     </div>
 
-                    {/* Tags */}
-                    {note.Tags && (
-                      <div className="flex flex-wrap gap-2 mb-3">
-                        {note.Tags.split(',').map((tag: string, tagIndex: number) => (
-                          <span key={tagIndex} className="px-2 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
-                            #{tag.trim()}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* Compact Action Buttons - X Style */}
-                    <div className="flex items-center space-x-6 text-gray-500">
+                    {/* X-Style Action Buttons */}
+                    <div className="flex items-center justify-between text-gray-500 mt-3 pt-2">
                       <button 
                         onClick={() => { onReplyToNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-2 hover:text-blue-600 transition-colors"
+                        className="flex items-center space-x-1 hover:text-blue-500 transition-colors p-1"
                       >
-                        <i className="fas fa-reply text-xs"></i>
+                        <i className="fas fa-comment text-sm"></i>
                         <span className="text-sm">Reply</span>
                       </button>
                       <button 
                         onClick={() => { onSetReminder(note); hapticFeedback(); }}
-                        className={`flex items-center space-x-2 transition-colors ${
+                        className={`flex items-center space-x-1 transition-colors p-1 ${
                           hasActiveReminder(originalIndex) 
-                            ? 'text-orange-600 hover:text-orange-700' 
-                            : 'hover:text-orange-600'
+                            ? 'text-orange-500 hover:text-orange-600' 
+                            : 'hover:text-orange-500'
                         }`}
                       >
-                        <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-xs`}></i>
-                        <span className="text-sm">{hasActiveReminder(originalIndex) ? 'Remind' : 'Remind'}</span>
+                        <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-sm`}></i>
+                        <span className="text-sm">Remind</span>
                       </button>
                       <button 
                         onClick={() => { onDeleteNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-2 hover:text-red-600 transition-colors"
+                        className="flex items-center space-x-1 hover:text-red-500 transition-colors p-1"
                       >
-                        <i className="fas fa-trash text-xs"></i>
+                        <i className="fas fa-trash text-sm"></i>
                         <span className="text-sm">Delete</span>
                       </button>
                     </div>
