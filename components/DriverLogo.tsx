@@ -43,14 +43,15 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
   const driverColors = getDriverSeriesColor(driverName);
   const imagePath = getImagePath(driverName);
 
-  // Debug logging
-  console.log('DriverLogo Debug:', {
-    driverName,
-    initials,
-    driverColors,
-    imagePath,
-    imageError
-  });
+  // Debug logging (remove this after fixing)
+  if (driverName.includes('Grant') || driverName.includes('Daniel') || driverName.includes('Connor')) {
+    console.log('Truck Driver Debug:', {
+      driverName,
+      initials,
+      driverColors,
+      imageError
+    });
+  }
 
   // Test if image exists when component mounts
   React.useEffect(() => {
@@ -69,9 +70,20 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
           className="w-full h-full rounded-full object-cover border-2 border-gray-600"
         />
       ) : (
-        <div className={`w-full h-full rounded-full ${driverColors.bgColor} flex items-center justify-center border-2 border-gray-300`}>
-          <span className={`font-bold ${driverColors.textColor}`} style={{ color: 'black', fontSize: '12px' }}>
-            {initials || 'XX'}
+        <div 
+          className={`w-full h-full rounded-full ${driverColors.bgColor} flex items-center justify-center border-2 border-gray-300`}
+          style={{ 
+            backgroundColor: driverColors.bgColor === 'bg-green-400' ? '#4ade80' : undefined 
+          }}
+        >
+          <span 
+            className={`font-bold ${driverColors.textColor}`} 
+            style={{ 
+              color: driverColors.textColor === 'text-black' ? '#000000' : undefined,
+              fontSize: '12px' 
+            }}
+          >
+            {initials}
           </span>
         </div>
       )}
