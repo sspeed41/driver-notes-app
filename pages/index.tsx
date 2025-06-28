@@ -248,6 +248,7 @@ const Index = () => {
   // Fetch recent notes on component mount (only if user is selected)
   useEffect(() => {
     if (!showUserSelection) {
+      console.log('🚀 FORCE REFRESH: Fetching notes on mount');
       fetchRecentNotes();
       
       // Auto-refresh recent notes when app becomes visible (user returns to the app)
@@ -598,6 +599,8 @@ const Index = () => {
   const fetchRecentNotes = async () => {
     setLoadingRecentNotes(true);
     console.log('🔄 Fetching recent notes...');
+    console.log('🔄 Current myViewEnabled:', myViewEnabled);
+    console.log('🔄 Current selectedNoteTaker:', selectedNoteTaker);
     
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
@@ -616,22 +619,41 @@ const Index = () => {
         const data = await response.json();
         console.log('📊 Raw data received:', data.length, 'notes');
         console.log('📊 First note sample:', data[0]);
+        console.log('📊 First 3 notes:', data.slice(0, 3));
         
         // Validate and clean the data
         const validNotes = data
           .filter((note: any) => {
-            const isValid = note && 
-                           note.Driver && 
-                           note.Note && 
-                           note.Timestamp && 
-                           note.Timestamp !== 'Invalid Date' &&
-                           !isNaN(new Date(note.Timestamp).getTime()); // Additional check for valid date
+            const hasDriver = note && note.Driver;
+            const hasNote = note && note.Note;
+            const hasTimestamp = note && note.Timestamp;
+            const timestampNotInvalid = note?.Timestamp !== 'Invalid Date';
+            const timestampParseable = !isNaN(new Date(note?.Timestamp).getTime());
+            
+            const isValid = hasDriver && hasNote && hasTimestamp && timestampNotInvalid && timestampParseable;
+            
+            console.log('🔍 Note validation:', {
+              driver: note?.Driver,
+              timestamp: note?.Timestamp,
+              hasDriver,
+              hasNote,
+              hasTimestamp,
+              timestampNotInvalid,
+              timestampParseable,
+              parsedDate: new Date(note?.Timestamp),
+              isValid
+            });
             
             if (!isValid) {
               console.warn('⚠️ Invalid note filtered out:', {
                 driver: note?.Driver,
                 timestamp: note?.Timestamp,
-                hasNote: !!note?.Note
+                hasNote: !!note?.Note,
+                reason: !hasDriver ? 'missing driver' : 
+                       !hasNote ? 'missing note' :
+                       !hasTimestamp ? 'missing timestamp' :
+                       !timestampNotInvalid ? 'invalid date string' :
+                       !timestampParseable ? 'unparseable timestamp' : 'unknown'
               });
             }
             
@@ -665,6 +687,17 @@ const Index = () => {
         
         const recentNotesSlice = sortedNotes.slice(0, 10);
         console.log('📝 Setting recent notes:', recentNotesSlice.length, 'notes');
+        console.log('📝 Final notes to display:', recentNotesSlice);
+        
+        // Debug: Show detailed info about what we're setting
+        recentNotesSlice.forEach((note: DriverNote, index: number) => {
+          console.log(`📝 Note ${index + 1}:`, {
+            Driver: note.Driver,
+            Timestamp: note.Timestamp,
+            NoteLength: note.Note?.length,
+            Type: note.Type
+          });
+        });
         
         // Check for new notes before updating state
         checkForNewNotes(sortedNotes);
@@ -674,6 +707,8 @@ const Index = () => {
         
         // Log success
         console.log('✅ Recent notes updated successfully');
+        console.log('✅ State should now have', recentNotesSlice.length, 'notes');
+        console.log('✅ React state updated with notes array:', recentNotesSlice.map((n: DriverNote) => n.Driver));
         
       } else {
         console.error('❌ Failed to fetch recent notes - Status:', response.status);

@@ -37,21 +37,33 @@ export const getUserRole = (noteTaker: string): UserRole | null => {
 };
 
 export const shouldShowNoteForUser = (note: any, currentUser: string, myViewEnabled: boolean): boolean => {
-  if (!myViewEnabled) return true;
+  // TEMPORARY: Always show all notes to debug the issue
+  console.log('🔍 shouldShowNoteForUser called:', { 
+    noteDriver: note?.Driver, 
+    noteTimestamp: note?.Timestamp,
+    noteText: note?.Note?.substring(0, 50) + '...',
+    currentUser, 
+    myViewEnabled,
+    noteValid: !!(note && note.Driver && note.Note && note.Timestamp)
+  });
+  return true;
   
-  const userRole = getUserRole(currentUser);
-  if (!userRole || userRole.tags.length === 0) return true; // Show all for Dan Stratton or unknown users
-  
-  // Check if note has any of the user's relevant tags
-  const noteTags = note.Tags ? note.Tags.toLowerCase().split(',').map((tag: string) => tag.trim()) : [];
-  const noteText = note.Note ? note.Note.toLowerCase() : '';
-  
-  // Check if any of the user's tags appear in the note's tags or content
-  return userRole.tags.some(tag => 
-    noteTags.includes(tag) || 
-    noteText.includes(`#${tag}`) ||
-    noteText.includes(tag)
-  );
+  // Original logic (temporarily disabled)
+  // if (!myViewEnabled) return true;
+  // 
+  // const userRole = getUserRole(currentUser);
+  // if (!userRole || userRole.tags.length === 0) return true; // Show all for Dan Stratton or unknown users
+  // 
+  // // Check if note has any of the user's relevant tags
+  // const noteTags = note.Tags ? note.Tags.toLowerCase().split(',').map((tag: string) => tag.trim()) : [];
+  // const noteText = note.Note ? note.Note.toLowerCase() : '';
+  // 
+  // // Check if any of the user's tags appear in the note's tags or content
+  // return userRole.tags.some(tag => 
+  //   noteTags.includes(tag) || 
+  //   noteText.includes(`#${tag}`) ||
+  //   noteText.includes(tag)
+  // );
 };
 
 export const getRoleColor = (noteTaker: string): string => {

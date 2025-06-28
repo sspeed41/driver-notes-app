@@ -65,6 +65,14 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   const filteredNotes = recentNotes.filter(note => 
     shouldShowNoteForUser(note, selectedNoteTaker, myViewEnabled)
   );
+  
+  console.log('🔍 RecentNotes - Input notes:', recentNotes.length);
+  console.log('🔍 RecentNotes - myViewEnabled:', myViewEnabled);
+  console.log('🔍 RecentNotes - selectedNoteTaker:', selectedNoteTaker);
+  console.log('🔍 RecentNotes - Filtered notes:', filteredNotes.length);
+  console.log('🔍 RecentNotes - First filtered:', filteredNotes[0]);
+  console.log('🔍 RecentNotes - All input notes:', recentNotes.map(n => ({ Driver: n.Driver, Timestamp: n.Timestamp })));
+  console.log('🔍 RecentNotes - All filtered notes:', filteredNotes.map(n => ({ Driver: n.Driver, Timestamp: n.Timestamp })));
 
   const getRoleColorClass = (noteTaker: string) => {
     const color = getRoleColor(noteTaker);
@@ -119,6 +127,14 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
               : 'No recent notes found. Create your first note above!'
             }
           </p>
+          {/* TEMPORARY DEBUG INFO */}
+          <div className="mt-4 p-3 bg-yellow-100 border border-yellow-300 rounded-md text-sm text-yellow-800">
+            <strong>🔧 DEBUG INFO:</strong><br/>
+            Input notes: {recentNotes.length}<br/>
+            Filtered notes: {filteredNotes.length}<br/>
+            My View: {myViewEnabled ? 'ON' : 'OFF'}<br/>
+            Selected Note Taker: {selectedNoteTaker}
+          </div>
         </div>
       ) : (
         <div className="space-y-4">
