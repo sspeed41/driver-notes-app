@@ -17,7 +17,7 @@ const UserSelection: React.FC<UserSelectionProps> = ({ onUserSelect }) => {
             className="w-40 h-auto max-h-16"
           />
         </div>
-        <h1 className="text-3xl font-bold mb-4 text-gray-900">Driver Notes V3.4</h1>
+        <h1 className="text-3xl font-bold mb-4 text-gray-900">Driver Notes V4.0</h1>
         <p className="text-gray-600 text-lg">Who are you?</p>
       </div>
 
