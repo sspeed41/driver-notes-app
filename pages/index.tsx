@@ -342,7 +342,7 @@ const Index = () => {
       if (newState) {
         const testNotification = {
           id: `test-${Date.now()}`,
-          title: 'Driver Notes V3.7.0',
+          title: 'Driver Notes V3.8.0',
           message: 'In-app notifications are now enabled! You\'ll be notified when team members create new notes.',
           timestamp: Date.now()
         };
@@ -401,7 +401,7 @@ const Index = () => {
             
             // Show a test notification
             setTimeout(() => {
-              new Notification('Driver Notes V3.7.0', {
+              new Notification('Driver Notes V3.8.0', {
                 body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
                 icon: '/images/W.O. LOGO - small.png'
               });
@@ -663,7 +663,7 @@ const Index = () => {
           }
         });
         
-        const recentNotesSlice = sortedNotes.slice(0, 10);
+        const recentNotesSlice = sortedNotes.slice(0, 25);
         console.log('📝 Setting recent notes:', recentNotesSlice.length, 'notes');
         
         // Check for new notes before updating state
@@ -1005,7 +1005,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.7.0</title>
+        <title>Wise Driver Notes V3.8.0</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
