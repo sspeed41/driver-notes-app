@@ -1,5 +1,25 @@
 # Driver Notes App Changelog
 
+## V3.7.0 - January 28, 2025
+
+### 🎨 Design Updates
+- **X/Twitter-style Timeline**: Redesigned notes display to look more like X/Twitter with thin divider lines
+- **Removed Card Borders**: Notes now flow together seamlessly without individual card containers
+- **Compact Layout**: Reduced spacing and smaller text sizes for a streamlined, modern look
+- **Better Hover Effects**: Subtle background highlighting instead of border changes
+- **Improved Visual Hierarchy**: Cleaner, more professional timeline appearance
+
+### 🔧 Technical Improvements
+- **Version Consistency**: Fixed mismatched version numbers across all pages and components
+- **Unified Branding**: All version displays now consistently show V3.7.0
+
+### 📱 User Experience
+- **Cleaner Timeline**: Notes display as a continuous feed with minimal visual separation
+- **More Content Visible**: Compact design allows more notes to be visible at once
+- **Professional Look**: Social media-inspired design feels modern and familiar
+
+---
+
 ## V3.6.2 - January 28, 2025
 
 ### 🎨 Header Cleanup & Size Reduction
