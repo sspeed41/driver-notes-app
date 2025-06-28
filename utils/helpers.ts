@@ -41,13 +41,13 @@ export const getDriverSeriesColor = (driverName: string): { bgColor: string; tex
   const juniorDrivers = ['Tristan McKee', 'Helio Meza', 'Corey Day', 'Ben Maier', 'Tyler Reif', 'Brenden Queen'];
 
   if (cupDrivers.includes(driverName)) {
-    return { bgColor: 'bg-red-100', textColor: 'text-red-700' };
+    return { bgColor: 'bg-red-200', textColor: 'text-red-800' };
   } else if (xfinityDrivers.includes(driverName)) {
-    return { bgColor: 'bg-blue-100', textColor: 'text-blue-700' };
+    return { bgColor: 'bg-blue-200', textColor: 'text-blue-800' };
   } else if (truckDrivers.includes(driverName)) {
-    return { bgColor: 'bg-green-300', textColor: 'text-green-800' };
+    return { bgColor: 'bg-green-200', textColor: 'text-green-800' };
   } else if (juniorDrivers.includes(driverName)) {
-    return { bgColor: 'bg-gray-100', textColor: 'text-gray-700' };
+    return { bgColor: 'bg-gray-200', textColor: 'text-gray-700' };
   } else {
     // Default fallback
     return { bgColor: 'bg-gray-200', textColor: 'text-gray-600' };

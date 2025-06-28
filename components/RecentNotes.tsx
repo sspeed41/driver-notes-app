@@ -78,8 +78,8 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
-      <div className="flex items-center justify-between mb-4">
+    <div className="bg-white">
+      <div className="flex items-center justify-between mb-4 px-4 pt-4">
         <div className="flex items-center space-x-3">
           <i className="fas fa-clock text-blue-500 text-xl"></i>
           <div>
@@ -107,12 +107,12 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
       </div>
 
       {loadingRecentNotes ? (
-        <div className="flex items-center justify-center py-8">
+        <div className="flex items-center justify-center py-8 px-4">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
           <span className="ml-3 text-gray-600">Loading recent notes...</span>
         </div>
       ) : filteredNotes.length === 0 ? (
-        <div className="text-center py-8">
+        <div className="text-center py-8 px-4">
           <i className="fas fa-sticky-note text-gray-300 text-4xl mb-4"></i>
           <p className="text-gray-500">
             {myViewEnabled 
@@ -137,7 +137,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
             );
 
             return (
-              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="py-3 hover:bg-gray-50 transition-colors">
+              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="py-3 px-4 hover:bg-gray-50 transition-colors">
                 {/* X-Style Compact Layout */}
                 <div className="flex items-start space-x-3">
                   {/* Smaller Avatar with Series Color */}
