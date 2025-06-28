@@ -112,7 +112,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         Driver: note.driver,
         'Note Taker': note.note_taker,
         Note: reformatComments(note.note),
-        Timestamp: note.timestamp,
+        Timestamp: note.created_at,
         Type: note.type || 'Note',
         Tags: note.tags || ''
       })) || [];

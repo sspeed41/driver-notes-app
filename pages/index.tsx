@@ -343,7 +343,7 @@ const Index = () => {
       if (newState) {
         const testNotification = {
           id: `test-${Date.now()}`,
-          title: 'Driver Notes V4.0',
+          title: 'Driver Notes V4.1',
           message: 'In-app notifications are now enabled! You\'ll be notified when team members create new notes.',
           timestamp: Date.now()
         };
@@ -402,7 +402,7 @@ const Index = () => {
             
             // Show a test notification
             setTimeout(() => {
-              new Notification('Driver Notes V4.0', {
+              new Notification('Driver Notes V4.1', {
                 body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
                 icon: '/images/W.O. LOGO - small.png'
               });
@@ -598,9 +598,6 @@ const Index = () => {
 
   const fetchRecentNotes = async () => {
     setLoadingRecentNotes(true);
-    console.log('🔄 Fetching recent notes...');
-    console.log('🔄 Current myViewEnabled:', myViewEnabled);
-    console.log('🔄 Current selectedNoteTaker:', selectedNoteTaker);
     
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
@@ -613,91 +610,29 @@ const Index = () => {
         }
       });
       
-      console.log('📡 API Response status:', response.status);
-      
       if (response.ok) {
         const data = await response.json();
-        console.log('📊 Raw data received:', data.length, 'notes');
-        console.log('📊 First note sample:', data[0]);
-        console.log('📊 First 3 notes:', data.slice(0, 3));
         
         // Validate and clean the data
         const validNotes = data
           .filter((note: any) => {
-            const hasDriver = note && note.Driver;
-            const hasNote = note && note.Note;
-            const hasTimestamp = note && note.Timestamp;
-            const timestampNotInvalid = note?.Timestamp !== 'Invalid Date';
-            const timestampParseable = !isNaN(new Date(note?.Timestamp).getTime());
-            
-            const isValid = hasDriver && hasNote && hasTimestamp && timestampNotInvalid && timestampParseable;
-            
-            console.log('🔍 Note validation:', {
-              driver: note?.Driver,
-              timestamp: note?.Timestamp,
-              hasDriver,
-              hasNote,
-              hasTimestamp,
-              timestampNotInvalid,
-              timestampParseable,
-              parsedDate: new Date(note?.Timestamp),
-              isValid
-            });
-            
-            if (!isValid) {
-              console.warn('⚠️ Invalid note filtered out:', {
-                driver: note?.Driver,
-                timestamp: note?.Timestamp,
-                hasNote: !!note?.Note,
-                reason: !hasDriver ? 'missing driver' : 
-                       !hasNote ? 'missing note' :
-                       !hasTimestamp ? 'missing timestamp' :
-                       !timestampNotInvalid ? 'invalid date string' :
-                       !timestampParseable ? 'unparseable timestamp' : 'unknown'
-              });
-            }
-            
-            return isValid;
+            return note && note.Driver && note.Note && note.Timestamp && 
+                   note.Timestamp !== 'Invalid Date' && 
+                   !isNaN(new Date(note.Timestamp).getTime());
           })
           .map((note: DriverNote) => ({
             ...note,
             Type: note.Type || 'Note' // Ensure Type is set, default to 'Note' if not present
           }));
         
-        console.log('✅ Valid notes after filtering:', validNotes.length);
-        
-        // Sort by timestamp with better error handling
+        // Sort by timestamp
         const sortedNotes = validNotes.sort((a: DriverNote, b: DriverNote) => {
-          try {
-            const dateA = new Date(a.Timestamp);
-            const dateB = new Date(b.Timestamp);
-            
-            // Check if dates are valid
-            if (isNaN(dateA.getTime()) || isNaN(dateB.getTime())) {
-              console.warn('⚠️ Invalid timestamp found:', a.Timestamp, b.Timestamp);
-              return 0; // Keep original order for invalid dates
-            }
-            
-            return dateB.getTime() - dateA.getTime();
-          } catch (error) {
-            console.error('❌ Error sorting notes:', error);
-            return 0;
-          }
+          const dateA = new Date(a.Timestamp);
+          const dateB = new Date(b.Timestamp);
+          return dateB.getTime() - dateA.getTime();
         });
         
         const recentNotesSlice = sortedNotes.slice(0, 10);
-        console.log('📝 Setting recent notes:', recentNotesSlice.length, 'notes');
-        console.log('📝 Final notes to display:', recentNotesSlice);
-        
-        // Debug: Show detailed info about what we're setting
-        recentNotesSlice.forEach((note: DriverNote, index: number) => {
-          console.log(`📝 Note ${index + 1}:`, {
-            Driver: note.Driver,
-            Timestamp: note.Timestamp,
-            NoteLength: note.Note?.length,
-            Type: note.Type
-          });
-        });
         
         // Check for new notes before updating state
         checkForNewNotes(sortedNotes);
@@ -705,33 +640,21 @@ const Index = () => {
         setRecentNotes(recentNotesSlice);
         setLastRefreshTime(new Date());
         
-        // Log success
-        console.log('✅ Recent notes updated successfully');
-        console.log('✅ State should now have', recentNotesSlice.length, 'notes');
-        console.log('✅ React state updated with notes array:', recentNotesSlice.map((n: DriverNote) => n.Driver));
-        
       } else {
-        console.error('❌ Failed to fetch recent notes - Status:', response.status);
-        const errorText = await response.text();
-        console.error('❌ Error response:', errorText);
-        
-        // Set error status for user feedback
+        console.error('Failed to fetch recent notes - Status:', response.status);
         setSaveStatus({
           success: false,
           message: `Failed to load recent notes (${response.status}). Please try refreshing.`
         });
       }
     } catch (error) {
-      console.error('❌ Error fetching recent notes:', error);
-      
-      // Set error status for user feedback
+      console.error('Error fetching recent notes:', error);
       setSaveStatus({
         success: false,
         message: 'Network error loading recent notes. Please check your connection and try again.'
       });
     } finally {
       setLoadingRecentNotes(false);
-      console.log('🏁 Fetch recent notes completed');
     }
   };
 
@@ -1040,7 +963,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V4.0 - Supabase</title>
+        <title>Wise Driver Notes V4.1 - Supabase</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
