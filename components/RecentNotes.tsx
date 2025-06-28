@@ -137,31 +137,42 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
 
             return (
               <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-gray-50 rounded-xl p-4 border border-gray-100 hover:border-gray-200 transition-colors">
-                <div className="flex items-start space-x-4">
-                  <DriverLogo driverName={note.Driver} size="md" />
+                {/* X-Style Layout: Avatar + Content */}
+                <div className="flex items-start space-x-3">
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <DriverLogo driverName={note.Driver} size="md" />
+                  </div>
+                  
+                  {/* Content Area */}
                   <div className="flex-1 min-w-0">
+                    {/* Inline Metadata */}
                     <div className="flex items-center space-x-2 mb-2 flex-wrap">
-                      <span className="font-semibold text-gray-900">{note.Driver}</span>
-                      {note.Type === 'Focus' && (
-                        <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
-                          🎯 Focus
-                        </span>
-                      )}
+                      <span className="font-semibold text-gray-900">{note['Note Taker'] || 'Unknown'}</span>
                       <span className="text-gray-400">•</span>
-                      <span className="text-gray-500 text-sm">{note['Note Taker'] || 'Unknown'}</span>
+                      <span className="text-gray-500 text-sm">{note.Driver}</span>
+                      {note.Type === 'Focus' && (
+                        <>
+                          <span className="text-gray-400">•</span>
+                          <span className="px-2 py-1 bg-red-500 text-white rounded-full text-xs font-medium">
+                            🎯 Focus
+                          </span>
+                        </>
+                      )}
                       <span className="text-gray-400">•</span>
                       <span className="text-gray-500 text-sm">
                         {note.Timestamp ? formatTimestamp(note.Timestamp) : 'Unknown time'}
                       </span>
                     </div>
-                    {/* Note Content with Comments */}
+                    
+                    {/* Note Content */}
                     <div className="text-gray-700 text-sm leading-relaxed mb-3">
                       {note.Note.split('\n').map((line, lineIndex) => {
                         // Check if this line is a comment (starts with "Comment by")
                         if (line.includes('Comment by ')) {
                           const parts = line.split('Comment by ');
                           return (
-                            <div key={lineIndex} className="mt-2 pl-4 border-l-2 border-blue-200 bg-blue-50 p-2 rounded-r">
+                            <div key={lineIndex} className="mt-2 pl-3 border-l-2 border-blue-200 bg-blue-50 p-2 rounded-r">
                               <div className="text-blue-600 text-xs font-medium mb-1">
                                 💬 Comment by {parts[1]?.split(':')[0] || 'Unknown'}
                               </div>
@@ -199,32 +210,32 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       </div>
                     )}
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center space-x-3">
+                    {/* Compact Action Buttons - X Style */}
+                    <div className="flex items-center space-x-6 text-gray-500">
                       <button 
                         onClick={() => { onReplyToNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-1 text-blue-600 hover:text-blue-700 text-sm"
+                        className="flex items-center space-x-2 hover:text-blue-600 transition-colors"
                       >
                         <i className="fas fa-reply text-xs"></i>
-                        <span>Reply</span>
+                        <span className="text-sm">Reply</span>
                       </button>
                       <button 
                         onClick={() => { onSetReminder(note); hapticFeedback(); }}
-                        className={`flex items-center space-x-1 text-sm ${
+                        className={`flex items-center space-x-2 transition-colors ${
                           hasActiveReminder(originalIndex) 
                             ? 'text-orange-600 hover:text-orange-700' 
-                            : 'text-gray-600 hover:text-gray-700'
+                            : 'hover:text-orange-600'
                         }`}
                       >
                         <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-xs`}></i>
-                        <span>{hasActiveReminder(originalIndex) ? 'Reminder Set' : 'Set Reminder'}</span>
+                        <span className="text-sm">{hasActiveReminder(originalIndex) ? 'Remind' : 'Remind'}</span>
                       </button>
                       <button 
                         onClick={() => { onDeleteNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-1 text-red-600 hover:text-red-700 text-sm"
+                        className="flex items-center space-x-2 hover:text-red-600 transition-colors"
                       >
                         <i className="fas fa-trash text-xs"></i>
-                        <span>Delete</span>
+                        <span className="text-sm">Delete</span>
                       </button>
                     </div>
                   </div>
