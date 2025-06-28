@@ -43,6 +43,15 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
   const driverColors = getDriverSeriesColor(driverName);
   const imagePath = getImagePath(driverName);
 
+  // Debug logging
+  console.log('DriverLogo Debug:', {
+    driverName,
+    initials,
+    driverColors,
+    imagePath,
+    imageError
+  });
+
   // Test if image exists when component mounts
   React.useEffect(() => {
     const img = new Image();
@@ -61,7 +70,9 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
         />
       ) : (
         <div className={`w-full h-full rounded-full ${driverColors.bgColor} flex items-center justify-center border-2 border-gray-300`}>
-          <span className={`font-bold ${driverColors.textColor}`}>{initials}</span>
+          <span className={`font-bold ${driverColors.textColor}`} style={{ color: 'black', fontSize: '12px' }}>
+            {initials || 'XX'}
+          </span>
         </div>
       )}
     </div>
