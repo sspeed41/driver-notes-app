@@ -23,7 +23,7 @@ const DiagnosticPanel: React.FC<DiagnosticPanelProps> = ({
     setApiTestResult('Testing...');
     
     try {
-      const response = await fetch('/api/sheets?t=' + Date.now());
+      const response = await fetch('/api/notes?t=' + Date.now());
       const data = await response.json();
       
       setApiTestResult(`✅ API Working! Status: ${response.status}, Notes: ${data.length}`);

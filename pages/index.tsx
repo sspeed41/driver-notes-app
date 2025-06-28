@@ -523,7 +523,7 @@ const Index = () => {
     }
 
     try {
-      const response = await fetch('/api/sheets', {
+      const response = await fetch('/api/notes', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ note })
@@ -601,7 +601,7 @@ const Index = () => {
     
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
-      const response = await fetch(`/api/sheets?t=${Date.now()}`, {
+      const response = await fetch(`/api/notes?t=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -811,7 +811,7 @@ const Index = () => {
         const timestamp = new Date().toISOString();
         
         // Update the original note with the comment
-        const response = await fetch('/api/sheets', {
+        const response = await fetch('/api/notes', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -840,7 +840,7 @@ const Index = () => {
         // Regular note save
         const noteTags = selectedTags.length > 0 ? selectedTags : extractTags(noteText);
         
-        const response = await fetch('/api/sheets', {
+        const response = await fetch('/api/notes', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -887,7 +887,7 @@ const Index = () => {
     setLoadingAthleteData(true);
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
-      const response = await fetch(`/api/sheets?t=${Date.now()}`, {
+      const response = await fetch(`/api/notes?t=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -1005,7 +1005,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.6.4</title>
+        <title>Wise Driver Notes V4.0 - Supabase</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}
