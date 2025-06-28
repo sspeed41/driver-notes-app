@@ -45,7 +45,7 @@ export const getDriverSeriesColor = (driverName: string): { bgColor: string; tex
   } else if (xfinityDrivers.includes(driverName)) {
     return { bgColor: 'bg-blue-200', textColor: 'text-blue-800' };
   } else if (truckDrivers.includes(driverName)) {
-    return { bgColor: 'bg-green-400', textColor: 'text-green-900' };
+    return { bgColor: 'bg-green-400', textColor: 'text-black' };
   } else if (juniorDrivers.includes(driverName)) {
     return { bgColor: 'bg-gray-200', textColor: 'text-gray-700' };
   } else {
