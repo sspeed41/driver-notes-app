@@ -12,7 +12,7 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
   size = 'md', 
   className = '' 
 }) => {
-  const [imageError, setImageError] = useState(false);
+  const [imageError, setImageError] = useState(true);
   
   // Size mappings
   const sizeClasses = {
@@ -43,6 +43,14 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
   const driverColors = getDriverSeriesColor(driverName);
   const imagePath = getImagePath(driverName);
 
+  // Test if image exists when component mounts
+  React.useEffect(() => {
+    const img = new Image();
+    img.onload = () => setImageError(false);
+    img.onerror = () => setImageError(true);
+    img.src = imagePath;
+  }, [imagePath]);
+
   return (
     <div className={`${sizeClasses[size]} ${className} relative flex-shrink-0`}>
       {!imageError ? (
@@ -50,8 +58,6 @@ const DriverLogo: React.FC<DriverLogoProps> = ({
           src={imagePath}
           alt={`${driverName} logo`}
           className="w-full h-full rounded-full object-cover border-2 border-gray-600"
-          onError={() => setImageError(true)}
-          onLoad={() => setImageError(false)}
         />
       ) : (
         <div className={`w-full h-full rounded-full ${driverColors.bgColor} flex items-center justify-center border-2 border-gray-300`}>
