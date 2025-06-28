@@ -2,7 +2,6 @@ import React from 'react';
 import { DriverNote } from '../types/interfaces';
 import DriverLogo from './DriverLogo';
 import { shouldShowNoteForUser, getRoleColor, getRoleDisplayName } from '../utils/roleMapping';
-import { getDriverSeriesColor } from '../utils/helpers';
 
 interface RecentNotesProps {
   recentNotes: DriverNote[];
@@ -140,12 +139,8 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
               <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="py-3 px-4 hover:bg-gray-50 transition-colors">
                 {/* X-Style Compact Layout */}
                 <div className="flex items-start space-x-3">
-                  {/* Smaller Avatar with Series Color */}
-                  <div className={`w-10 h-10 ${getDriverSeriesColor(note.Driver).bgColor} rounded-full flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                    <span className={`text-xs font-bold ${getDriverSeriesColor(note.Driver).textColor}`}>
-                      {note.Driver ? note.Driver.split(' ').map(n => n[0]).join('').substring(0, 2) : '??'}
-                    </span>
-                  </div>
+                  {/* Driver Logo */}
+                  <DriverLogo driverName={note.Driver} size="sm" className="mt-0.5" />
                   
                   {/* Content Area */}
                   <div className="flex-1 min-w-0">
