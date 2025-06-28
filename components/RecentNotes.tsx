@@ -77,8 +77,8 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-3">
           <i className="fas fa-clock text-blue-500 text-xl"></i>
           <div>
@@ -121,7 +121,7 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
           </p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="divide-y divide-gray-100">
           {filteredNotes.map((note, index) => {
             // Add safety checks for note data
             if (!note || !note.Driver || !note.Note) {
@@ -136,11 +136,11 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
             );
 
             return (
-              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="bg-white rounded-xl p-3 border border-gray-200 hover:border-gray-300 transition-colors">
+              <div key={`${note.Driver}-${note.Timestamp}-${index}`} className="py-3 hover:bg-gray-50 transition-colors">
                 {/* X-Style Compact Layout */}
                 <div className="flex items-start space-x-3">
                   {/* Smaller Avatar */}
-                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <span className="text-xs font-bold text-gray-600">
                       {note.Driver ? note.Driver.split(' ').map(n => n[0]).join('').substring(0, 2) : '??'}
                     </span>
@@ -164,17 +164,17 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                     </div>
                     
                     {/* X-Style Tweet Content */}
-                    <div className="text-gray-900 text-base leading-relaxed mb-3">
+                    <div className="text-gray-900 text-sm leading-relaxed mb-2">
                       {note.Note.split('\n').map((line, lineIndex) => {
                         // Check if this line is a comment
                         if (line.includes('Comment by ')) {
                           const parts = line.split('Comment by ');
                           return (
                             <div key={lineIndex} className="mt-2 pl-3 border-l-2 border-gray-300 bg-gray-50 p-2 rounded">
-                              <div className="text-gray-600 text-sm font-medium mb-1">
+                              <div className="text-gray-600 text-xs font-medium mb-1">
                                 💬 {parts[1]?.split(':')[0] || 'Unknown'}
                               </div>
-                              <div className="text-gray-800">
+                              <div className="text-gray-800 text-sm">
                                 {parts[1]?.substring(parts[1].indexOf(':') + 1)?.trim() || ''}
                               </div>
                             </div>
@@ -197,32 +197,32 @@ const RecentNotes: React.FC<RecentNotesProps> = ({
                       })}
                     </div>
 
-                    {/* X-Style Action Buttons */}
-                    <div className="flex items-center justify-between text-gray-500 mt-3 pt-2">
+                    {/* X-Style Action Buttons - More Compact */}
+                    <div className="flex items-center space-x-6 text-gray-400 text-xs">
                       <button 
                         onClick={() => { onReplyToNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-1 hover:text-blue-500 transition-colors p-1"
+                        className="flex items-center space-x-1 hover:text-blue-500 transition-colors"
                       >
-                        <i className="fas fa-comment text-sm"></i>
-                        <span className="text-sm">Reply</span>
+                        <i className="fas fa-comment text-xs"></i>
+                        <span>Reply</span>
                       </button>
                       <button 
                         onClick={() => { onSetReminder(note); hapticFeedback(); }}
-                        className={`flex items-center space-x-1 transition-colors p-1 ${
+                        className={`flex items-center space-x-1 transition-colors ${
                           hasActiveReminder(originalIndex) 
                             ? 'text-orange-500 hover:text-orange-600' 
                             : 'hover:text-orange-500'
                         }`}
                       >
-                        <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-sm`}></i>
-                        <span className="text-sm">Remind</span>
+                        <i className={`fas ${hasActiveReminder(originalIndex) ? 'fa-bell' : 'fa-bell-slash'} text-xs`}></i>
+                        <span>Remind</span>
                       </button>
                       <button 
                         onClick={() => { onDeleteNote(note); hapticFeedback(); }}
-                        className="flex items-center space-x-1 hover:text-red-500 transition-colors p-1"
+                        className="flex items-center space-x-1 hover:text-red-500 transition-colors"
                       >
-                        <i className="fas fa-trash text-sm"></i>
-                        <span className="text-sm">Delete</span>
+                        <i className="fas fa-trash text-xs"></i>
+                        <span>Delete</span>
                       </button>
                     </div>
                   </div>
