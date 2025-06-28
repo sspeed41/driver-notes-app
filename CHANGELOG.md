@@ -8,6 +8,11 @@
 - **Compact Layout**: Reduced spacing and smaller text sizes for a streamlined, modern look
 - **Better Hover Effects**: Subtle background highlighting instead of border changes
 - **Improved Visual Hierarchy**: Cleaner, more professional timeline appearance
+- **Driver Series Color Coding**: Added faint color coding to driver avatar circles based on racing series:
+  - **Cup drivers (Red)**: Kyle Larson, Alex Bowman, Ross Chastain, Daniel Suarez, Austin Dillon
+  - **Xfinity drivers (Blue)**: Connor Zilisch, Carson Kvapil, Austin Hill, Jesse Love, Nick Sanchez, Daniel Dye
+  - **Truck drivers (Green)**: Grant Enfinger, Daniel Hemric, Connor Mosack, Kaden Honeycutt, Rajah Caruth, Andres Perez, Matt Mills, Dawson Sutton
+  - **Junior drivers (Gray)**: Tristan McKee, Helio Meza, Corey Day, Ben Maier, Tyler Reif, Brenden Queen
 
 ### 🔧 Technical Improvements
 - **Version Consistency**: Fixed mismatched version numbers across all pages and components
