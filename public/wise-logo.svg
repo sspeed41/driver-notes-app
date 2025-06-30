@@ -1,0 +1,14 @@
+<svg viewBox="0 0 400 120" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background shape -->
+  <path d="M20 20 L360 20 L380 40 L380 80 L360 100 L20 100 L20 60 L40 40 Z" 
+        fill="none" 
+        stroke="#7cff00" 
+        stroke-width="4"/>
+  
+  <!-- WISE text -->
+  <text x="50" y="75" 
+        font-family="Arial, sans-serif" 
+        font-size="48" 
+        font-weight="bold" 
+        fill="white">WISE</text>
+</svg> 

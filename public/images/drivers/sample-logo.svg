@@ -1,0 +1,22 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="95" fill="#1f2937" stroke="#7cff00" stroke-width="4"/>
+  
+  <!-- Racing stripes -->
+  <rect x="85" y="20" width="30" height="160" fill="#7cff00" opacity="0.3"/>
+  <rect x="75" y="30" width="10" height="140" fill="#7cff00"/>
+  <rect x="115" y="30" width="10" height="140" fill="#7cff00"/>
+  
+  <!-- Driver initials -->
+  <text x="100" y="120" font-family="Arial, sans-serif" font-size="48" font-weight="bold" 
+        text-anchor="middle" fill="white">KL</text>
+  
+  <!-- Racing number -->
+  <text x="100" y="160" font-family="Arial, sans-serif" font-size="24" font-weight="bold" 
+        text-anchor="middle" fill="#7cff00">#5</text>
+  
+  <!-- Small racing flag -->
+  <rect x="160" y="40" width="20" height="15" fill="white"/>
+  <rect x="160" y="40" width="10" height="7.5" fill="black"/>
+  <rect x="170" y="47.5" width="10" height="7.5" fill="black"/>
+</svg> 
