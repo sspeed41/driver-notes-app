@@ -342,7 +342,7 @@ const Index = () => {
       if (newState) {
         const testNotification = {
           id: `test-${Date.now()}`,
-          title: 'Driver Notes V3.5',
+          title: 'Driver Notes V5.0',
           message: 'In-app notifications are now enabled! You\'ll be notified when team members create new notes.',
           timestamp: Date.now()
         };
@@ -401,7 +401,7 @@ const Index = () => {
             
             // Show a test notification
             setTimeout(() => {
-              new Notification('Driver Notes V3.5', {
+              new Notification('Driver Notes V5.0', {
                 body: 'Notifications are now enabled! You\'ll be notified when team members create new notes.',
                 icon: '/images/W.O. LOGO - small.png'
               });
@@ -601,7 +601,7 @@ const Index = () => {
     
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
-      const response = await fetch(`/api/sheets?t=${Date.now()}`, {
+      const response = await fetch(`/api/supabase?t=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -811,7 +811,7 @@ const Index = () => {
         const timestamp = new Date().toISOString();
         
         // Update the original note with the comment
-        const response = await fetch('/api/sheets', {
+        const response = await fetch('/api/supabase', {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
@@ -840,7 +840,7 @@ const Index = () => {
         // Regular note save
         const noteTags = selectedTags.length > 0 ? selectedTags : extractTags(noteText);
         
-        const response = await fetch('/api/sheets', {
+        const response = await fetch('/api/supabase', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -887,7 +887,7 @@ const Index = () => {
     setLoadingAthleteData(true);
     try {
       // Add cache-busting timestamp to prevent mobile caching issues
-      const response = await fetch(`/api/sheets?t=${Date.now()}`, {
+      const response = await fetch(`/api/supabase?t=${Date.now()}`, {
         method: 'GET',
         headers: {
           'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -1005,7 +1005,7 @@ const Index = () => {
   return (
     <>
       <Head>
-        <title>Wise Driver Notes V3.6.5</title>
+        <title>Wise Driver Notes V5.0</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         
         {/* PWA Meta Tags */}

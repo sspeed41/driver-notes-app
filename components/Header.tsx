@@ -64,7 +64,7 @@ const Header: React.FC<HeaderProps> = ({
               alt="W.O." 
               className="w-8 h-8 object-contain"
             />
-            <h1 className="text-lg font-semibold text-gray-900">Driver Notes V3.6.5</h1>
+            <h1 className="text-lg font-semibold text-gray-900">Driver Notes V5.0</h1>
           </div>
           
           {/* Status and Menu */}
