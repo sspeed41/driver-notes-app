@@ -1019,17 +1019,17 @@ const Index = () => {
         <meta name="theme-color" content="#7cff00" />
         
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/images/w-logo.svg" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/images/w-logo.svg" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/images/w-logo.svg" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/images/w-logo.svg" />
+        <link rel="apple-touch-icon" href="/images/W.O. LOGO - small.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/W.O. LOGO - small.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/W.O. LOGO - small.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/images/W.O. LOGO - small.png" />
         
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
         
         {/* Favicon */}
-        <link rel="icon" type="image/svg+xml" href="/images/w-logo.svg" />
-        <link rel="shortcut icon" href="/images/w-logo.svg" />
+        <link rel="icon" type="image/png" href="/images/W.O. LOGO - small.png" />
+        <link rel="shortcut icon" href="/images/W.O. LOGO - small.png" />
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
         
