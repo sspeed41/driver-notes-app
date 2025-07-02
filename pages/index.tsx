@@ -1016,20 +1016,20 @@ const Index = () => {
         <meta name="description" content="Professional racing driver notes and feedback system" />
         <meta name="format-detection" content="telephone=no" />
         <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="theme-color" content="#3b82f6" />
+        <meta name="theme-color" content="#7cff00" />
         
         {/* Apple Touch Icons */}
-        <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="152x152" href="/images/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png" />
-        <link rel="apple-touch-icon" sizes="167x167" href="/images/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" href="/images/w-logo.svg" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/images/w-logo.svg" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/images/w-logo.svg" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/images/w-logo.svg" />
         
         {/* Manifest */}
         <link rel="manifest" href="/manifest.json" />
         
         {/* Favicon */}
-        <link rel="icon" type="image/png" sizes="32x32" href="/images/icon-192.png" />
-        <link rel="icon" type="image/png" sizes="16x16" href="/images/icon-192.png" />
+        <link rel="icon" type="image/svg+xml" href="/images/w-logo.svg" />
+        <link rel="shortcut icon" href="/images/w-logo.svg" />
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
         

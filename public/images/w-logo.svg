@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background circle for app icon -->
+  <circle cx="200" cy="200" r="190" fill="#1f2937" stroke="#7cff00" stroke-width="8"/>
+  
+  <!-- W Logo - More accurate based on the image -->
+  <g transform="translate(200, 200)">
+    <!-- Main W shape - Bold and stylized -->
+    <path d="M-160 -90 L-130 -90 L-90 40 L-60 -50 L-30 -50 L0 40 L30 -50 L60 -50 L90 40 L130 -90 L160 -90 L160 -70 L100 90 L70 90 L45 30 L0 -10 L-45 30 L-70 90 L-100 90 L-160 -70 Z" 
+          fill="white"/>
+    
+    <!-- Green accent outline -->
+    <path d="M-160 -90 L-130 -90 L-90 40 L-60 -50 L-30 -50 L0 40 L30 -50 L60 -50 L90 40 L130 -90 L160 -90 L160 -70 L100 90 L70 90 L45 30 L0 -10 L-45 30 L-70 90 L-100 90 L-160 -70 Z" 
+          fill="none" 
+          stroke="#7cff00" 
+          stroke-width="6"/>
+    
+    <!-- Additional green accent sweep -->
+    <path d="M140 -50 L190 0 L190 50 L140 90" 
+          fill="none" 
+          stroke="#7cff00" 
+          stroke-width="8"
+          stroke-linecap="round"/>
+  </g>
+</svg> 
